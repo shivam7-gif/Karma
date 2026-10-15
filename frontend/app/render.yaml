@@ -1,0 +1,17 @@
+services:
+  - type: static
+    name: echo-sim-assistant
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_USE_MOCK
+        value: "true"

@@ -1,0 +1,11 @@
+Model Information:
+* title:	Cursor 3D
+* source:	https://sketchfab.com/3d-models/cursor-3d-fab4012385cc4d6fa7301d68df2ff271
+* author:	ReliefRain (https://sketchfab.com/ReliefRain)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Cursor 3D" (https://sketchfab.com/3d-models/cursor-3d-fab4012385cc4d6fa7301d68df2ff271) by ReliefRain (https://sketchfab.com/ReliefRain) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

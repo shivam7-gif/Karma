@@ -1,0 +1,166 @@
+# ==============================================================================
+# Git Ignore - Fullstack Project (Backend & Frontend)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Dependencies & Package Managers
+# ------------------------------------------------------------------------------
+node_modules/
+.pnp/
+.pnp.js
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnpm-store/
+
+# ------------------------------------------------------------------------------
+# Production & Build Outputs
+# ------------------------------------------------------------------------------
+dist/
+dist-ssr/
+build/
+out/
+.next/
+.nuxt/
+.output/
+.svelte-kit/
+*.tsbuildinfo
+*.d.ts.map
+
+# ------------------------------------------------------------------------------
+# Environment Variables & Secrets
+# ------------------------------------------------------------------------------
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+*.env.local
+
+# Allow tracked template/example files
+!.env.example
+!.env.*.example
+!.env.sample
+!.env.template
+
+# Allow frontend mock configuration file
+!frontend/app/.env.production
+
+# Credentials & Certificate keys
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+*.p12
+*.credentials
+
+# ------------------------------------------------------------------------------
+# Logs & Debugging
+# ------------------------------------------------------------------------------
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+vite.log
+
+# ------------------------------------------------------------------------------
+# Testing & Code Coverage
+# ------------------------------------------------------------------------------
+coverage/
+.nyc_output/
+*.lcov
+.vitest/
+vitest.config.*.timestamp*
+playwright-report/
+test-results/
+.playwright/
+
+# ------------------------------------------------------------------------------
+# Caches & Temporary Files
+# ------------------------------------------------------------------------------
+.cache/
+.eslintcache
+.stylelintcache
+.prettiercache
+.parcel-cache/
+.temp/
+temp/
+tmp/
+*.tmp
+*.temp
+
+# ------------------------------------------------------------------------------
+# Python & AI Tools (for ai_engine / scripts)
+# ------------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+ENV/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.ipynb_checkpoints
+
+# ------------------------------------------------------------------------------
+# Local Databases & Storage
+# ------------------------------------------------------------------------------
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+
+# ------------------------------------------------------------------------------
+# IDEs & Code Editors
+# ------------------------------------------------------------------------------
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# VS Code - ignore workspace state but allow shared config recommendations
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# ------------------------------------------------------------------------------
+# Operating System Files
+# ------------------------------------------------------------------------------
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
