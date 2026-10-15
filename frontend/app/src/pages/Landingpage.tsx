@@ -1,29 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AlexaViewer from '../components/AlexaViewer';
+import loadingSvg from '../assets/loader/loading.svg';
 
 const Landing: React.FC = () => {
   const navigate = useNavigate();
   const [modelLoaded, setModelLoaded] = useState(false);
-  const [progress, setProgress] = useState(15);
-  const [isReady, setIsReady] = useState(false);
   const [showToast, setShowToast] = useState(false);
-
-  // Smooth progress bar simulation syncing with real load
-  useEffect(() => {
-    if (modelLoaded) {
-      setProgress(100);
-      const timer = setTimeout(() => setIsReady(true), 350);
-      return () => clearTimeout(timer);
-    }
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 94) return prev;
-        return prev + Math.floor(Math.random() * 6) + 3;
-      });
-    }, 150);
-    return () => clearInterval(interval);
-  }, [modelLoaded]);
 
   const handleClick = () => {
     setShowToast(true);
@@ -33,10 +16,6 @@ const Landing: React.FC = () => {
   return (
     <>
       <style>{`
-        @keyframes pulse-slow {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.05); opacity: 0.85; }
-        }
         @keyframes toast-in {
           from { opacity: 0; transform: translateX(-50%) translateY(12px) scale(0.92); }
           to   { opacity: 1; transform: translateX(-50%) translateY(0)  scale(1);    }
@@ -49,130 +28,28 @@ const Landing: React.FC = () => {
 
       {/* Full-viewport 3D canvas */}
       <div style={{ position: 'fixed', inset: 0, zIndex: 0, cursor: 'pointer' }}>
-        {!isReady && (
+        {!modelLoaded && (
           <div
             style={{
               position: 'absolute',
               inset: 0,
               display: 'flex',
-              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
               background: '#FFFFFF',
               zIndex: 10,
-              transition: 'opacity 0.5s ease',
-              opacity: modelLoaded ? 0 : 1,
-              pointerEvents: modelLoaded ? 'none' : 'auto',
+              transition: 'opacity 0.4s ease',
             }}
           >
-            {/* Centered Brand Loading Box */}
-            <div
+            <img
+              src={loadingSvg}
+              alt="Loading..."
               style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '16px',
-                width: '100%',
-                maxWidth: '320px',
-                padding: '0 24px',
+                width: '110px',
+                height: '110px',
+                objectFit: 'contain',
               }}
-            >
-              {/* Brand Logo Pulse */}
-              <div
-                style={{
-                  width: '56px',
-                  height: '56px',
-                  borderRadius: '16px',
-                  background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)',
-                  border: '1px solid #BFDBFE',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 8px 24px rgba(37, 99, 235, 0.12)',
-                  animation: 'pulse-slow 2s infinite ease-in-out',
-                }}
-              >
-                <div
-                  style={{
-                    width: '24px',
-                    height: '24px',
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #2563EB 0%, #60A5FA 100%)',
-                  }}
-                />
-              </div>
-
-              {/* Title & Tagline */}
-              <div style={{ textAlign: 'center' }}>
-                <h2
-                  style={{
-                    fontSize: '22px',
-                    fontWeight: 700,
-                    letterSpacing: '-0.025em',
-                    color: '#0F172A',
-                    margin: 0,
-                  }}
-                >
-                  Karma
-                </h2>
-                <p
-                  style={{
-                    fontSize: '13px',
-                    color: '#64748B',
-                    margin: '4px 0 0 0',
-                    letterSpacing: '-0.01em',
-                  }}
-                >
-                  Voice-First Personal AI Assistant
-                </p>
-              </div>
-
-              {/* Progress Bar Container */}
-              <div
-                style={{
-                  width: '100%',
-                  marginTop: '8px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px',
-                }}
-              >
-                <div
-                  style={{
-                    width: '100%',
-                    height: '6px',
-                    background: '#F1F5F9',
-                    borderRadius: '9999px',
-                    overflow: 'hidden',
-                    border: '1px solid #E2E8F0',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: `${progress}%`,
-                      height: '100%',
-                      background: 'linear-gradient(90deg, #2563EB 0%, #60A5FA 100%)',
-                      borderRadius: '9999px',
-                      transition: 'width 0.25s ease-out',
-                    }}
-                  />
-                </div>
-
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    fontSize: '12px',
-                    color: '#94A3B8',
-                    fontWeight: 500,
-                  }}
-                >
-                  <span>Initializing assistant…</span>
-                  <span>{Math.min(progress, 100)}%</span>
-                </div>
-              </div>
-            </div>
+            />
           </div>
         )}
 
@@ -182,7 +59,6 @@ const Landing: React.FC = () => {
           transition: 'opacity 0.8s ease',
         }}>
           <AlexaViewer
-            onProgress={(p) => setProgress((prev) => Math.max(prev, p))}
             onLoad={() => setModelLoaded(true)}
             onClick={handleClick}
           />
