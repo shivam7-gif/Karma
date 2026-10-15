@@ -115,12 +115,19 @@ ENV/
 *.ipynb_checkpoints
 
 # ------------------------------------------------------------------------------
-# Local Databases & Storage
+# Local Databases & Vector Stores
 # ------------------------------------------------------------------------------
 *.sqlite
 *.sqlite3
 *.db
 *.db-journal
+vector_store/
+vectorstore/
+chroma_db/
+.chroma/
+faiss_index/
+data/vectorstore/
+
 
 # ------------------------------------------------------------------------------
 # IDEs & Code Editors
