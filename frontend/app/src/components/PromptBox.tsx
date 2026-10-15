@@ -87,17 +87,12 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
           display: 'flex',
           alignItems: 'center',
           width: '100%',
-          background: 'rgba(255, 255, 255, 0.05)',
-          backdropFilter: 'var(--blur-glass)',
-          WebkitBackdropFilter: 'var(--blur-glass)',
-          border: '1px solid var(--border-glass-light)',
-          borderRadius: 'var(--radius-full)',
+          background: '#FFFFFF',
+          border: '1px solid #CBD5E1',
+          borderRadius: '9999px',
           padding: '8px 10px 8px 16px',
-          boxShadow: 'var(--shadow-input)',
-          transition: 'border-color var(--transition-fast), box-shadow var(--transition-fast)',
-        }}
-        onFocus={() => {
-          // Subtle focus glow
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)',
+          transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
         }}
       >
         {/* Left: Brand ring icon */}
@@ -130,7 +125,7 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
             background: 'transparent',
             border: 'none',
             outline: 'none',
-            color: 'var(--text-primary)',
+            color: '#0F172A',
             fontSize: '15px',
             fontFamily: 'inherit',
             fontWeight: 400,
@@ -164,16 +159,16 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
               justifyContent: 'center',
               background: 'transparent',
               border: 'none',
-              color: 'var(--text-secondary)',
+              color: '#64748B',
               cursor: 'pointer',
-              transition: 'all var(--transition-fast)',
+              transition: 'all 0.15s ease',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = 'var(--text-primary)';
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+              e.currentTarget.style.color = '#0F172A';
+              e.currentTarget.style.background = '#F1F5F9';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.color = 'var(--text-secondary)';
+              e.currentTarget.style.color = '#64748B';
               e.currentTarget.style.background = 'transparent';
             }}
           >
@@ -193,22 +188,22 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: isListening ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
-              border: isListening ? '1px solid rgba(239, 68, 68, 0.5)' : 'none',
-              color: isListening ? '#EF4444' : 'var(--text-secondary)',
+              background: isListening ? '#FEE2E2' : 'transparent',
+              border: isListening ? '1px solid #FCA5A5' : 'none',
+              color: isListening ? '#DC2626' : '#64748B',
               cursor: 'pointer',
-              transition: 'all var(--transition-fast)',
+              transition: 'all 0.15s ease',
               animation: isListening ? 'pulse 1.5s infinite' : 'none',
             }}
             onMouseEnter={(e) => {
               if (!isListening) {
-                e.currentTarget.style.color = 'var(--text-primary)';
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.color = '#0F172A';
+                e.currentTarget.style.background = '#F1F5F9';
               }
             }}
             onMouseLeave={(e) => {
               if (!isListening) {
-                e.currentTarget.style.color = 'var(--text-secondary)';
+                e.currentTarget.style.color = '#64748B';
                 e.currentTarget.style.background = 'transparent';
               }
             }}
@@ -228,23 +223,23 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: hasText ? 'var(--accent-blue)' : 'rgba(255, 255, 255, 0.06)',
+              background: hasText ? '#2563EB' : '#F1F5F9',
               border: 'none',
-              color: hasText ? '#FFFFFF' : 'rgba(255, 255, 255, 0.25)',
+              color: hasText ? '#FFFFFF' : '#94A3B8',
               cursor: hasText ? 'pointer' : 'not-allowed',
-              opacity: hasText ? 1 : 0.45,
-              boxShadow: hasText ? '0 2px 8px rgba(76, 141, 255, 0.4)' : 'none',
-              transition: 'all var(--transition-fast)',
+              opacity: hasText ? 1 : 0.6,
+              boxShadow: hasText ? '0 1px 3px rgba(37, 99, 235, 0.3)' : 'none',
+              transition: 'all 0.15s ease',
             }}
             onMouseEnter={(e) => {
               if (hasText) {
-                e.currentTarget.style.background = 'var(--text-accent-hover)';
+                e.currentTarget.style.background = '#1D4ED8';
                 e.currentTarget.style.transform = 'scale(1.04)';
               }
             }}
             onMouseLeave={(e) => {
               if (hasText) {
-                e.currentTarget.style.background = 'var(--accent-blue)';
+                e.currentTarget.style.background = '#2563EB';
                 e.currentTarget.style.transform = 'scale(1)';
               }
             }}

@@ -1,5 +1,6 @@
 import { Check, BookOpen, Sparkles, ShoppingBag, Compass } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { KineticTextReveal } from '@/components/ui/kinetic-text-reveal';
 
 interface SuggestionChipsProps {
   onSelectPrompt: (promptText: string) => void;
@@ -61,7 +62,7 @@ export const SuggestionChips: React.FC<SuggestionChipsProps> = ({ onSelectPrompt
         ...style,
       }}
     >
-      {CHIPS.map((chip) => {
+      {CHIPS.map((chip, index) => {
         const Icon = chip.icon;
         return (
           <button
@@ -73,32 +74,39 @@ export const SuggestionChips: React.FC<SuggestionChipsProps> = ({ onSelectPrompt
               alignItems: 'center',
               gap: '7px',
               padding: '8px 16px',
-              borderRadius: 'var(--radius-full)',
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid var(--border-glass)',
-              color: 'var(--text-secondary)',
+              borderRadius: '9999px',
+              background: '#FFFFFF',
+              border: '1px solid #E2E8F0',
+              color: '#475569',
               fontSize: '13px',
               fontWeight: 500,
               fontFamily: 'inherit',
               cursor: 'pointer',
-              backdropFilter: 'var(--blur-glass)',
-              transition: 'all var(--transition-normal)',
+              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
+              transition: 'all 0.15s ease',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-              e.currentTarget.style.color = 'var(--text-primary)';
-              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+              e.currentTarget.style.background = '#F8FAFC';
+              e.currentTarget.style.color = '#0F172A';
+              e.currentTarget.style.borderColor = '#CBD5E1';
               e.currentTarget.style.transform = 'translateY(-1px)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-              e.currentTarget.style.color = 'var(--text-secondary)';
-              e.currentTarget.style.borderColor = 'var(--border-glass)';
+              e.currentTarget.style.background = '#FFFFFF';
+              e.currentTarget.style.color = '#475569';
+              e.currentTarget.style.borderColor = '#E2E8F0';
               e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
-            <Icon size={14} strokeWidth={2} style={{ opacity: 0.85 }} />
-            <span>{chip.label}</span>
+            <Icon size={14} strokeWidth={2} style={{ color: '#2563EB', opacity: 0.9 }} />
+            <KineticTextReveal
+              text={chip.label}
+              splitBy="characters"
+              stagger={0.03}
+              delay={0.35 + index * 0.06}
+              distance={8}
+              className="font-medium"
+            />
           </button>
         );
       })}

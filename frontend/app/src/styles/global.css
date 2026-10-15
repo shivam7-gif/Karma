@@ -73,3 +73,93 @@ a:focus-visible,
   white-space: nowrap;
   border-width: 0;
 }
+
+/* Kinetic Text & Layout Utilities */
+.text-5xl {
+  font-size: clamp(2.5rem, 5vw, 3.25rem);
+  line-height: 1.1;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.tracking-tight {
+  letter-spacing: -0.035em;
+}
+
+.inline-flex {
+  display: inline-flex;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.whitespace-pre-wrap {
+  white-space: pre-wrap;
+}
+
+.align-baseline {
+  vertical-align: baseline;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-start {
+  align-items: flex-start;
+}
+
+.inline-block {
+  display: inline-block;
+}
+
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.pb-1 {
+  padding-bottom: 0.25rem;
+}
+
+.will-change-transform {
+  will-change: transform;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.text-4xl {
+  font-size: clamp(2rem, 4vw, 2.5rem);
+  line-height: 1.2;
+}
+
+.text-3xl {
+  font-size: clamp(1.6rem, 3.2vw, 2rem);
+  line-height: 1.25;
+}
+
+.text-lg {
+  font-size: 1.125rem;
+  line-height: 1.5;
+}
+
+.text-base {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.font-normal {
+  font-weight: 400;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.font-semibold {
+  font-weight: 600;
+}

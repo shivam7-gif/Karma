@@ -1,4 +1,5 @@
 import React from 'react';
+import { KineticTextReveal } from "@/components/ui/kinetic-text-reveal";
 import { CONFIG } from '../config';
 
 interface GreetingProps {
@@ -11,26 +12,37 @@ export const Greeting: React.FC<GreetingProps> = ({ className = '', style }) => 
     <div
       className={`assistant-greeting ${className}`}
       style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
         textAlign: 'center',
         marginBottom: '28px',
         userSelect: 'none',
         ...style,
       }}
     >
-      <h1
-        style={{
-          fontFamily: 'var(--font-sans)',
-          fontSize: 'var(--text-greeting-size)',
-          fontWeight: 'var(--text-greeting-weight)',
-          color: 'var(--text-primary)',
-          letterSpacing: '-0.025em',
-          lineHeight: 1.25,
-          margin: 0,
-          textShadow: '0 2px 20px rgba(0, 0, 0, 0.4)',
-        }}
-      >
-        Hello {CONFIG.userName}, how can I help?
-      </h1>
+      <div style={{ color: 'var(--text-primary)', marginBottom: '8px' }}>
+        <KineticTextReveal
+          text={`Hello ${CONFIG.userName}, how can I help?`}
+          splitBy="characters"
+          stagger={0.025}
+          distance={16}
+          staggerFrom="center"
+          className="text-5xl font-bold tracking-tight justify-center"
+        />
+      </div>
+      <div style={{ color: 'var(--text-secondary)' }}>
+        <KineticTextReveal
+          text="Ask questions, search through your documents, or plan your day."
+          splitBy="words"
+          stagger={0.04}
+          delay={0.25}
+          distance={12}
+          staggerFrom="start"
+          className="text-base font-normal justify-center"
+        />
+      </div>
     </div>
   );
 };

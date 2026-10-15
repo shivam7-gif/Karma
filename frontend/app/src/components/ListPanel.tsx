@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { X, AlignLeft, Plus, Check } from 'lucide-react';
+import { KineticTextReveal } from '@/components/ui/kinetic-text-reveal';
 import { initialListData } from '../data/lists';
 import type { ListData, ListItem } from '../data/lists';
 import { useAppStore } from '../store/appStore';
@@ -117,14 +118,21 @@ export const ListPanel: React.FC<ListPanelProps> = ({ isOpen, onClose, onSelectL
           <h2
             style={{
               fontSize: '17px',
-              fontWeight: 500,
+              fontWeight: 600,
               color: 'var(--text-primary)',
               letterSpacing: '-0.01em',
               textAlign: 'center',
               margin: 0,
             }}
           >
-            List
+            <KineticTextReveal
+              text="Lists & Tasks"
+              splitBy="characters"
+              stagger={0.03}
+              distance={10}
+              staggerFrom="center"
+              className="font-semibold justify-center"
+            />
           </h2>
           <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
             <button

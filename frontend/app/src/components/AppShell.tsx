@@ -41,31 +41,31 @@ export const AppShell: React.FC = () => {
     <div
       className="echo-sim-outer-frame"
       style={{
-        width: '100%',
-        maxWidth: '1440px',
-        height: 'calc(100vh - 24px)',
-        maxHeight: '940px',
-        borderRadius: 'var(--radius-outer)',
+        width: '100vw',
+        height: '100vh',
+        maxWidth: 'none',
+        maxHeight: 'none',
+        borderRadius: 0,
         position: 'relative',
-        background: 'var(--bg-app-gradient)',
-        boxShadow: 'var(--shadow-app)',
+        background: 'radial-gradient(ellipse 95% 75% at 50% 20%, #EBF4FF 0%, #F5F9FF 45%, #FFFFFF 100%)',
+        boxShadow: 'none',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
-        border: '1px solid var(--border-glass)',
+        border: 'none',
       }}
     >
-      {/* Ambient center blue glow behind content */}
+      {/* Ambient center soft blue glow behind content */}
       <div
         className="ambient-glow-sphere"
         style={{
           position: 'absolute',
-          top: '45%',
+          top: '40%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: '640px',
-          height: '420px',
-          background: 'radial-gradient(ellipse, rgba(76, 141, 255, 0.16) 0%, rgba(15, 42, 74, 0.08) 45%, transparent 70%)',
+          width: '720px',
+          height: '460px',
+          background: 'radial-gradient(ellipse, rgba(191, 219, 254, 0.35) 0%, rgba(219, 234, 254, 0.15) 50%, transparent 70%)',
           pointerEvents: 'none',
           zIndex: 1,
         }}

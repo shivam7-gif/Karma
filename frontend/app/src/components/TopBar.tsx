@@ -1,6 +1,5 @@
 import React from 'react';
 import { Activity } from 'lucide-react';
-import { BrandLogo } from './BrandLogo';
 import { DeviceToggle } from './DeviceToggle';
 import { CONFIG } from '../config';
 import { useAppStore } from '../store/appStore';
@@ -14,17 +13,15 @@ export const TopBar: React.FC = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '24px 32px 16px 32px',
+        padding: '20px 32px 12px 32px',
         position: 'relative',
         zIndex: 20,
         width: '100%',
-        minHeight: '64px',
+        minHeight: '60px',
       }}
     >
-      {/* Top Left: Brand Mark */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-        <BrandLogo size={28} />
-      </div>
+      {/* Top Left: Spacer */}
+      <div style={{ width: '32px' }} />
 
       {/* Top Center: Device Toggle & Trace Button */}
       <div
@@ -47,14 +44,29 @@ export const TopBar: React.FC = () => {
             alignItems: 'center',
             gap: '6px',
             padding: '5px 12px',
-            borderRadius: 'var(--radius-full)',
-            background: tracePanelOpen ? 'rgba(76, 141, 255, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-            border: `1px solid ${tracePanelOpen ? 'var(--accent-blue)' : 'var(--border-glass)'}`,
-            color: tracePanelOpen ? 'var(--text-accent)' : 'var(--text-secondary)',
+            borderRadius: '9999px',
+            background: tracePanelOpen ? '#EFF6FF' : '#FFFFFF',
+            border: `1px solid ${tracePanelOpen ? '#BFDBFE' : '#E2E8F0'}`,
+            color: tracePanelOpen ? '#1D4ED8' : '#475569',
             fontSize: '12px',
             fontWeight: 500,
             cursor: 'pointer',
-            transition: 'all var(--transition-normal)',
+            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
+            transition: 'all 0.15s ease',
+          }}
+          onMouseEnter={(e) => {
+            if (!tracePanelOpen) {
+              e.currentTarget.style.background = '#F8FAFC';
+              e.currentTarget.style.color = '#0F172A';
+              e.currentTarget.style.borderColor = '#CBD5E1';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!tracePanelOpen) {
+              e.currentTarget.style.background = '#FFFFFF';
+              e.currentTarget.style.color = '#475569';
+              e.currentTarget.style.borderColor = '#E2E8F0';
+            }
           }}
         >
           <Activity size={13} />
@@ -64,8 +76,8 @@ export const TopBar: React.FC = () => {
               style={{
                 fontSize: '10px',
                 padding: '1px 5px',
-                borderRadius: 'var(--radius-full)',
-                background: 'var(--accent-blue)',
+                borderRadius: '9999px',
+                background: '#2563EB',
                 color: '#FFFFFF',
                 fontWeight: 600,
               }}
@@ -86,13 +98,14 @@ export const TopBar: React.FC = () => {
       >
         <div
           style={{
-            border: '1px solid var(--border-glass)',
-            borderRadius: 'var(--radius-full)',
+            border: '1px solid #E2E8F0',
+            borderRadius: '9999px',
             padding: '4px 12px',
             fontSize: '12px',
             fontWeight: 500,
-            color: 'var(--text-secondary)',
-            background: 'rgba(255, 255, 255, 0.03)',
+            color: '#64748B',
+            background: '#FFFFFF',
+            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
             userSelect: 'none',
             letterSpacing: '0.01em',
           }}
@@ -108,23 +121,24 @@ export const TopBar: React.FC = () => {
             width: '32px',
             height: '32px',
             borderRadius: '50%',
-            background: 'rgba(255, 255, 255, 0.1)',
-            border: '1px solid var(--border-glass-light)',
-            color: 'var(--text-primary)',
+            background: '#EFF6FF',
+            border: '1px solid #BFDBFE',
+            color: '#1D4ED8',
             fontSize: '13px',
             fontWeight: 600,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            transition: 'all var(--transition-normal)',
+            transition: 'all 0.15s ease',
+            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = 'var(--accent-blue)';
+            e.currentTarget.style.borderColor = '#2563EB';
             e.currentTarget.style.transform = 'scale(1.05)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = 'var(--border-glass-light)';
+            e.currentTarget.style.borderColor = '#BFDBFE';
             e.currentTarget.style.transform = 'scale(1)';
           }}
         >

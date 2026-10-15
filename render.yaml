@@ -1,0 +1,34 @@
+services:
+  # Karma Web Application (Static Site SPA)
+  - type: static
+    name: karma-web
+    env: static
+    rootDir: frontend/app
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_USE_MOCK
+        value: "true"
+
+  # Karma Backend API Service
+  - type: web
+    name: karma-api
+    env: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000

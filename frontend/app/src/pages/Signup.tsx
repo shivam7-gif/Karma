@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import alexa_1 from '../assets/hero_section/alexa_1.jpg';
-import { BrandLogo } from '../components/BrandLogo';
-import { User, Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { KineticTextReveal } from '@/components/ui/kinetic-text-reveal';
+import pic1 from '../assets/auth/pic_1.jpg';
 
 const Signup: React.FC = () => {
   const navigate = useNavigate();
@@ -21,7 +21,7 @@ const Signup: React.FC = () => {
     }, 600);
   };
 
-  const handleOAuth = (provider: 'google' | 'github') => {
+  const handleOAuth = (_provider: 'google' | 'github') => {
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
@@ -32,180 +32,112 @@ const Signup: React.FC = () => {
   return (
     <div
       style={{
-        width: '100vw',
+        width: '100%',
+        minHeight: '100vh',
         height: '100vh',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'radial-gradient(ellipse 90% 80% at 50% 30%, #0d213a 0%, #060c16 60%, #020408 100%)',
-        padding: '24px',
-        boxSizing: 'border-box',
+        background: '#FFFFFF',
         overflow: 'hidden',
       }}
+      className="auth-split-layout"
     >
-      {/* Outer Card with 40% / 60% Grid Split */}
+      {/* Left Side: 50% Photo Column */}
       <div
-        className="auth-container-grid"
+        className="auth-photo-column"
         style={{
-          width: '100%',
-          maxWidth: '1080px',
-          height: 'min(720px, 94vh)',
-          borderRadius: '24px',
-          background: 'rgba(11, 18, 30, 0.75)',
-          backdropFilter: 'var(--blur-heavy)',
-          WebkitBackdropFilter: 'var(--blur-heavy)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          boxShadow: '0 30px 80px rgba(0, 0, 0, 0.7), 0 0 40px rgba(76, 141, 255, 0.1)',
-          display: 'flex',
-          overflow: 'hidden',
+          width: '50%',
+          height: '100%',
+          minHeight: '100vh',
           position: 'relative',
+          overflow: 'hidden',
+          borderRight: '1px solid #E2E8F0',
+          background: '#F1F5F9',
         }}
       >
-        {/* Left Side: 40% Space for Picture & Showcase */}
-        <div
-          className="auth-picture-column"
+        <img
+          src={pic1}
+          alt="Sign up visual"
           style={{
-            width: '40%',
+            width: '100%',
             height: '100%',
-            position: 'relative',
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            padding: '36px 32px',
-            borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+            objectFit: 'cover',
+            objectPosition: 'center',
+            display: 'block',
           }}
-        >
-          {/* Background Image */}
-          <img
-            src={alexa_1}
-            alt="Karma Echo Smart Home Visual"
-            style={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              objectPosition: 'center 35%',
-              filter: 'brightness(0.72) contrast(1.08)',
-            }}
-          />
+        />
+      </div>
 
-          {/* Vignette Overlay */}
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'linear-gradient(180deg, rgba(3, 8, 16, 0.75) 0%, rgba(6, 14, 28, 0.4) 40%, rgba(3, 8, 16, 0.92) 100%)',
-              pointerEvents: 'none',
-            }}
-          />
 
-          {/* Top Branding on Left */}
-          <div style={{ position: 'relative', zIndex: 10 }}>
-            <BrandLogo size={30} />
-          </div>
-
-          {/* Bottom Feature Badges on Left */}
-          <div style={{ position: 'relative', zIndex: 10 }}>
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '4px 12px',
-                borderRadius: 'var(--radius-full)',
-                background: 'rgba(76, 141, 255, 0.2)',
-                border: '1px solid rgba(76, 141, 255, 0.4)',
-                color: '#FFFFFF',
-                fontSize: '12px',
-                fontWeight: 600,
-                marginBottom: '14px',
-              }}
-            >
-              <Sparkles size={13} style={{ color: 'var(--accent-blue)' }} />
-              <span>Early Access Simulator</span>
-            </div>
-
-            <h3
-              style={{
-                color: '#FFFFFF',
-                fontSize: '22px',
-                fontWeight: 600,
-                lineHeight: 1.3,
-                letterSpacing: '-0.02em',
-                marginBottom: '12px',
-                textShadow: '0 2px 12px rgba(0, 0, 0, 0.6)',
-              }}
-            >
-              Experience Next-Gen Home AI.
-            </h3>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)', fontSize: '13px' }}>
-                <CheckCircle2 size={15} style={{ color: 'var(--accent-blue)', flexShrink: 0 }} />
-                <span>Multimodal Echo & Echo Show modes</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)', fontSize: '13px' }}>
-                <CheckCircle2 size={15} style={{ color: 'var(--accent-blue)', flexShrink: 0 }} />
-                <span>Live tool execution & developer trace</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)', fontSize: '13px' }}>
-                <CheckCircle2 size={15} style={{ color: 'var(--accent-blue)', flexShrink: 0 }} />
-                <span>Smart list & itinerary organization</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Side: 60% Width for Sign-Up Logic */}
+      {/* Right Side: 50% Form Area */}
+      <div
+        className="auth-form-column"
+        style={{
+          width: '50%',
+          height: '100%',
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '40px 32px',
+          boxSizing: 'border-box',
+          overflowY: 'auto',
+          background: '#FFFFFF',
+        }}
+      >
         <div
-          className="auth-form-column"
           style={{
-            width: '60%',
-            height: '100%',
+            width: '100%',
+            maxWidth: '420px',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center',
-            padding: '40px 48px',
             boxSizing: 'border-box',
-            overflowY: 'auto',
           }}
         >
           {/* Header */}
-          <div style={{ marginBottom: '22px' }}>
+          <div style={{ marginBottom: '28px', textAlign: 'center' }}>
             <h1
               style={{
-                color: '#FFFFFF',
-                fontSize: '28px',
-                fontWeight: 600,
-                letterSpacing: '-0.025em',
-                marginBottom: '6px',
+                color: '#0F172A',
+                marginBottom: '8px',
+                lineHeight: 1.2,
               }}
             >
-              Create an account
+              <KineticTextReveal
+                text="Create an account"
+                splitBy="characters"
+                stagger={0.03}
+                distance={14}
+                staggerFrom="center"
+                className="text-3xl font-bold tracking-tight justify-center"
+              />
             </h1>
-            <p
+            <div
               style={{
-                color: 'var(--text-secondary)',
-                fontSize: '14px',
-                margin: 0,
+                color: '#64748B',
+                lineHeight: 1.5,
               }}
             >
-              Sign up with Google, GitHub, or your email to get started
-            </p>
+              <KineticTextReveal
+                text="Sign up with Google, GitHub, or your email to get started"
+                splitBy="words"
+                stagger={0.03}
+                delay={0.2}
+                distance={10}
+                className="text-sm font-normal justify-center"
+              />
+            </div>
           </div>
 
-          {/* OAuth Buttons (Google & GitHub) */}
+          {/* OAuth Buttons */}
           <div
             style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
-              gap: '14px',
-              marginBottom: '20px',
+              gap: '12px',
+              marginBottom: '24px',
             }}
           >
-            {/* Google OAuth Button */}
             <button
               type="button"
               onClick={() => handleOAuth('google')}
@@ -216,25 +148,24 @@ const Signup: React.FC = () => {
                 justifyContent: 'center',
                 gap: '10px',
                 padding: '11px 16px',
-                borderRadius: 'var(--radius-lg)',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.14)',
-                color: '#FFFFFF',
-                fontSize: '13px',
+                borderRadius: '10px',
+                background: '#FFFFFF',
+                border: '1px solid #E2E8F0',
+                color: '#1E293B',
+                fontSize: '14px',
                 fontWeight: 500,
                 fontFamily: 'inherit',
                 cursor: 'pointer',
-                transition: 'all var(--transition-fast)',
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
+                transition: 'background 0.15s ease, border-color 0.15s ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                e.currentTarget.style.borderColor = 'rgba(76, 141, 255, 0.5)';
-                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.background = '#F8FAFC';
+                e.currentTarget.style.borderColor = '#CBD5E1';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.14)';
-                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.background = '#FFFFFF';
+                e.currentTarget.style.borderColor = '#E2E8F0';
               }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24">
@@ -258,7 +189,6 @@ const Signup: React.FC = () => {
               <span>Google</span>
             </button>
 
-            {/* GitHub OAuth Button */}
             <button
               type="button"
               onClick={() => handleOAuth('github')}
@@ -269,28 +199,27 @@ const Signup: React.FC = () => {
                 justifyContent: 'center',
                 gap: '10px',
                 padding: '11px 16px',
-                borderRadius: 'var(--radius-lg)',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.14)',
-                color: '#FFFFFF',
-                fontSize: '13px',
+                borderRadius: '10px',
+                background: '#FFFFFF',
+                border: '1px solid #E2E8F0',
+                color: '#1E293B',
+                fontSize: '14px',
                 fontWeight: 500,
                 fontFamily: 'inherit',
                 cursor: 'pointer',
-                transition: 'all var(--transition-fast)',
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
+                transition: 'background 0.15s ease, border-color 0.15s ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                e.currentTarget.style.borderColor = 'rgba(76, 141, 255, 0.5)';
-                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.background = '#F8FAFC';
+                e.currentTarget.style.borderColor = '#CBD5E1';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.14)';
-                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.background = '#FFFFFF';
+                e.currentTarget.style.borderColor = '#E2E8F0';
               }}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="#FFFFFF">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#181717">
                 <path
                   fillRule="evenodd"
                   clipRule="evenodd"
@@ -307,27 +236,34 @@ const Signup: React.FC = () => {
               display: 'flex',
               alignItems: 'center',
               gap: '12px',
-              marginBottom: '20px',
+              marginBottom: '24px',
             }}
           >
-            <div style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.1)' }} />
-            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <div style={{ flex: 1, height: '1px', background: '#E2E8F0' }} />
+            <span
+              style={{
+                fontSize: '12px',
+                color: '#94A3B8',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                fontWeight: 500,
+              }}
+            >
               or continue with email
             </span>
-            <div style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.1)' }} />
+            <div style={{ flex: 1, height: '1px', background: '#E2E8F0' }} />
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {/* Full Name */}
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
               <label
                 style={{
                   display: 'block',
                   fontSize: '13px',
-                  fontWeight: 500,
-                  color: 'var(--text-secondary)',
-                  marginBottom: '5px',
+                  fontWeight: 600,
+                  color: '#334155',
+                  marginBottom: '6px',
                 }}
               >
                 Full Name
@@ -336,14 +272,15 @@ const Signup: React.FC = () => {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  borderRadius: 'var(--radius-lg)',
-                  padding: '9px 14px',
+                  background: '#FFFFFF',
+                  border: '1px solid #CBD5E1',
+                  borderRadius: '10px',
+                  padding: '10px 14px',
                   gap: '10px',
+                  transition: 'border-color 0.15s ease',
                 }}
               >
-                <User size={16} style={{ color: 'var(--text-secondary)' }} />
+                <User size={16} style={{ color: '#94A3B8', flexShrink: 0 }} />
                 <input
                   type="text"
                   required
@@ -355,7 +292,7 @@ const Signup: React.FC = () => {
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
-                    color: '#FFFFFF',
+                    color: '#0F172A',
                     fontSize: '14px',
                     fontFamily: 'inherit',
                   }}
@@ -363,15 +300,14 @@ const Signup: React.FC = () => {
               </div>
             </div>
 
-            {/* Email Input */}
             <div>
               <label
                 style={{
                   display: 'block',
                   fontSize: '13px',
-                  fontWeight: 500,
-                  color: 'var(--text-secondary)',
-                  marginBottom: '5px',
+                  fontWeight: 600,
+                  color: '#334155',
+                  marginBottom: '6px',
                 }}
               >
                 Email Address
@@ -380,14 +316,15 @@ const Signup: React.FC = () => {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  borderRadius: 'var(--radius-lg)',
-                  padding: '9px 14px',
+                  background: '#FFFFFF',
+                  border: '1px solid #CBD5E1',
+                  borderRadius: '10px',
+                  padding: '10px 14px',
                   gap: '10px',
+                  transition: 'border-color 0.15s ease',
                 }}
               >
-                <Mail size={16} style={{ color: 'var(--text-secondary)' }} />
+                <Mail size={16} style={{ color: '#94A3B8', flexShrink: 0 }} />
                 <input
                   type="email"
                   required
@@ -399,7 +336,7 @@ const Signup: React.FC = () => {
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
-                    color: '#FFFFFF',
+                    color: '#0F172A',
                     fontSize: '14px',
                     fontFamily: 'inherit',
                   }}
@@ -407,15 +344,14 @@ const Signup: React.FC = () => {
               </div>
             </div>
 
-            {/* Password Input */}
             <div>
               <label
                 style={{
                   display: 'block',
                   fontSize: '13px',
-                  fontWeight: 500,
-                  color: 'var(--text-secondary)',
-                  marginBottom: '5px',
+                  fontWeight: 600,
+                  color: '#334155',
+                  marginBottom: '6px',
                 }}
               >
                 Create Password
@@ -424,14 +360,15 @@ const Signup: React.FC = () => {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  borderRadius: 'var(--radius-lg)',
-                  padding: '9px 14px',
+                  background: '#FFFFFF',
+                  border: '1px solid #CBD5E1',
+                  borderRadius: '10px',
+                  padding: '10px 14px',
                   gap: '10px',
+                  transition: 'border-color 0.15s ease',
                 }}
               >
-                <Lock size={16} style={{ color: 'var(--text-secondary)' }} />
+                <Lock size={16} style={{ color: '#94A3B8', flexShrink: 0 }} />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
@@ -443,7 +380,7 @@ const Signup: React.FC = () => {
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
-                    color: '#FFFFFF',
+                    color: '#0F172A',
                     fontSize: '14px',
                     fontFamily: 'inherit',
                   }}
@@ -454,7 +391,7 @@ const Signup: React.FC = () => {
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    color: 'var(--text-secondary)',
+                    color: '#64748B',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -467,7 +404,6 @@ const Signup: React.FC = () => {
               </div>
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
@@ -478,28 +414,22 @@ const Signup: React.FC = () => {
                 gap: '8px',
                 width: '100%',
                 padding: '12px',
-                marginTop: '6px',
-                borderRadius: 'var(--radius-lg)',
-                background: 'var(--accent-blue)',
+                marginTop: '8px',
+                borderRadius: '10px',
+                background: '#2563EB',
                 border: 'none',
                 color: '#FFFFFF',
-                fontSize: '14px',
+                fontSize: '15px',
                 fontWeight: 600,
                 cursor: isLoading ? 'default' : 'pointer',
-                boxShadow: '0 4px 16px rgba(76, 141, 255, 0.4)',
-                transition: 'all var(--transition-fast)',
+                boxShadow: '0 1px 3px rgba(37, 99, 235, 0.3)',
+                transition: 'background 0.15s ease',
               }}
               onMouseEnter={(e) => {
-                if (!isLoading) {
-                  e.currentTarget.style.background = 'var(--text-accent-hover)';
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                }
+                if (!isLoading) e.currentTarget.style.background = '#1D4ED8';
               }}
               onMouseLeave={(e) => {
-                if (!isLoading) {
-                  e.currentTarget.style.background = 'var(--accent-blue)';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }
+                if (!isLoading) e.currentTarget.style.background = '#2563EB';
               }}
             >
               <span>{isLoading ? 'Creating account...' : 'Create Account'}</span>
@@ -510,17 +440,17 @@ const Signup: React.FC = () => {
           {/* Toggle to Login */}
           <div
             style={{
-              marginTop: '20px',
+              marginTop: '24px',
               textAlign: 'center',
-              fontSize: '13px',
-              color: 'var(--text-secondary)',
+              fontSize: '14px',
+              color: '#64748B',
             }}
           >
             Already have an account?{' '}
             <Link
               to="/login"
               style={{
-                color: 'var(--accent-blue)',
+                color: '#2563EB',
                 fontWeight: 600,
                 textDecoration: 'none',
               }}
@@ -532,22 +462,24 @@ const Signup: React.FC = () => {
       </div>
 
       <style>{`
-        @media (max-width: 820px) {
-          .auth-container-grid {
+        @media (max-width: 860px) {
+          .auth-split-layout {
             flex-direction: column !important;
             height: auto !important;
-            max-height: 94vh !important;
+            min-height: 100vh !important;
           }
-          .auth-picture-column {
+          .auth-photo-column {
             width: 100% !important;
-            height: 180px !important;
-            padding: 20px !important;
+            min-height: 220px !important;
+            height: 220px !important;
+            padding: 24px !important;
             border-right: none !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-bottom: 1px solid #E2E8F0 !important;
           }
           .auth-form-column {
             width: 100% !important;
-            padding: 24px !important;
+            min-height: auto !important;
+            padding: 32px 20px !important;
           }
         }
       `}</style>

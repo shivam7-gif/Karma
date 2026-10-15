@@ -54,12 +54,12 @@ export const SideNav: React.FC = () => {
         flexDirection: 'column',
         alignItems: 'center',
         padding: '8px 6px',
-        background: 'rgba(255, 255, 255, 0.04)',
-        backdropFilter: 'var(--blur-glass)',
-        WebkitBackdropFilter: 'var(--blur-glass)',
-        border: '1px solid var(--border-glass)',
-        borderRadius: 'var(--radius-full)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+        background: 'rgba(255, 255, 255, 0.92)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        border: '1px solid #E2E8F0',
+        borderRadius: '9999px',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06)',
         gap: '8px',
         width: '46px',
       }}
@@ -83,22 +83,22 @@ export const SideNav: React.FC = () => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 borderRadius: isActive ? '10px' : '50%',
-                background: isActive ? 'var(--accent-blue)' : 'transparent',
-                color: isActive ? '#FFFFFF' : 'var(--text-secondary)',
+                background: isActive ? '#2563EB' : 'transparent',
+                color: isActive ? '#FFFFFF' : '#64748B',
                 border: 'none',
                 cursor: 'pointer',
-                transition: 'all var(--transition-normal)',
-                boxShadow: isActive ? '0 4px 14px rgba(76, 141, 255, 0.4)' : 'none',
+                transition: 'all 0.15s ease',
+                boxShadow: isActive ? '0 2px 6px rgba(37, 99, 235, 0.25)' : 'none',
               }}
               onMouseEnter={(e) => {
                 if (!isActive) {
-                  e.currentTarget.style.color = 'var(--text-primary)';
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.color = '#0F172A';
+                  e.currentTarget.style.background = '#F1F5F9';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isActive) {
-                  e.currentTarget.style.color = 'var(--text-secondary)';
+                  e.currentTarget.style.color = '#64748B';
                   e.currentTarget.style.background = 'transparent';
                 }
               }}
@@ -117,18 +117,18 @@ export const SideNav: React.FC = () => {
                 transform: 'translateY(-50%)',
                 marginLeft: '12px',
                 padding: '4px 10px',
-                background: 'rgba(10, 15, 25, 0.95)',
-                border: '1px solid var(--border-glass-light)',
-                borderRadius: 'var(--radius-sm)',
-                color: 'var(--text-primary)',
+                background: '#1E293B',
+                border: '1px solid #334155',
+                borderRadius: '6px',
+                color: '#FFFFFF',
                 fontSize: '12px',
                 fontWeight: 500,
                 whiteSpace: 'nowrap',
                 pointerEvents: 'none',
                 opacity: 0,
-                transition: 'opacity var(--transition-fast), transform var(--transition-fast)',
+                transition: 'opacity 0.15s ease, transform 0.15s ease',
                 zIndex: 50,
-                boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
               }}
             >
               {item.label}
@@ -136,6 +136,7 @@ export const SideNav: React.FC = () => {
           </div>
         );
       })}
+
 
       <style>{`
         .nav-item-wrapper:hover .nav-tooltip {

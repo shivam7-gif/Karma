@@ -1,6 +1,6 @@
 services:
   - type: static
-    name: echo-sim-assistant
+    name: karma-web
     env: static
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist

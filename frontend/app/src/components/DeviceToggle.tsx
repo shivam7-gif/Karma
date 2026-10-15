@@ -12,11 +12,11 @@ export const DeviceToggle: React.FC = () => {
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        background: 'rgba(255, 255, 255, 0.05)',
-        border: '1px solid var(--border-glass)',
-        borderRadius: 'var(--radius-full)',
+        background: '#FFFFFF',
+        border: '1px solid #E2E8F0',
+        borderRadius: '9999px',
         padding: '3px',
-        backdropFilter: 'var(--blur-glass)',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
         gap: '2px',
       }}
     >
@@ -30,16 +30,28 @@ export const DeviceToggle: React.FC = () => {
           alignItems: 'center',
           gap: '6px',
           padding: '4px 10px',
-          borderRadius: 'var(--radius-full)',
+          borderRadius: '9999px',
           border: 'none',
           cursor: 'pointer',
           fontSize: '12px',
           fontWeight: 500,
           fontFamily: 'inherit',
-          transition: 'all var(--transition-normal)',
-          background: deviceMode === 'voice-only' ? 'var(--accent-blue)' : 'transparent',
-          color: deviceMode === 'voice-only' ? '#FFFFFF' : 'var(--text-secondary)',
-          boxShadow: deviceMode === 'voice-only' ? '0 2px 8px rgba(76, 141, 255, 0.35)' : 'none',
+          transition: 'all 0.15s ease',
+          background: deviceMode === 'voice-only' ? '#2563EB' : 'transparent',
+          color: deviceMode === 'voice-only' ? '#FFFFFF' : '#64748B',
+          boxShadow: deviceMode === 'voice-only' ? '0 1px 2px rgba(0, 0, 0, 0.08)' : 'none',
+        }}
+        onMouseEnter={(e) => {
+          if (deviceMode !== 'voice-only') {
+            e.currentTarget.style.color = '#0F172A';
+            e.currentTarget.style.background = '#F1F5F9';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (deviceMode !== 'voice-only') {
+            e.currentTarget.style.color = '#64748B';
+            e.currentTarget.style.background = 'transparent';
+          }
         }}
       >
         <Mic size={13} />
@@ -56,16 +68,28 @@ export const DeviceToggle: React.FC = () => {
           alignItems: 'center',
           gap: '6px',
           padding: '4px 10px',
-          borderRadius: 'var(--radius-full)',
+          borderRadius: '9999px',
           border: 'none',
           cursor: 'pointer',
           fontSize: '12px',
           fontWeight: 500,
           fontFamily: 'inherit',
-          transition: 'all var(--transition-normal)',
-          background: deviceMode === 'screen' ? 'var(--accent-blue)' : 'transparent',
-          color: deviceMode === 'screen' ? '#FFFFFF' : 'var(--text-secondary)',
-          boxShadow: deviceMode === 'screen' ? '0 2px 8px rgba(76, 141, 255, 0.35)' : 'none',
+          transition: 'all 0.15s ease',
+          background: deviceMode === 'screen' ? '#2563EB' : 'transparent',
+          color: deviceMode === 'screen' ? '#FFFFFF' : '#64748B',
+          boxShadow: deviceMode === 'screen' ? '0 1px 2px rgba(0, 0, 0, 0.08)' : 'none',
+        }}
+        onMouseEnter={(e) => {
+          if (deviceMode !== 'screen') {
+            e.currentTarget.style.color = '#0F172A';
+            e.currentTarget.style.background = '#F1F5F9';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (deviceMode !== 'screen') {
+            e.currentTarget.style.color = '#64748B';
+            e.currentTarget.style.background = 'transparent';
+          }
         }}
       >
         <Monitor size={13} />
