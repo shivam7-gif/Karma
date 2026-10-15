@@ -1,6 +1,7 @@
 import React from 'react';
 import { KineticTextReveal } from "@/components/ui/kinetic-text-reveal";
 import { CONFIG } from '../config';
+import { useAppStore } from '../store/appStore';
 
 interface GreetingProps {
   className?: string;
@@ -8,6 +9,9 @@ interface GreetingProps {
 }
 
 export const Greeting: React.FC<GreetingProps> = ({ className = '', style }) => {
+  const { user } = useAppStore();
+  const userName = user?.name || CONFIG.userName || 'Shiva';
+
   return (
     <div
       className={`assistant-greeting ${className}`}
@@ -24,7 +28,8 @@ export const Greeting: React.FC<GreetingProps> = ({ className = '', style }) => 
     >
       <div style={{ color: 'var(--text-primary)', marginBottom: '8px' }}>
         <KineticTextReveal
-          text={`Hello ${CONFIG.userName}, how can I help?`}
+          key={userName}
+          text={`Hello ${userName}, how can I help?`}
           splitBy="characters"
           stagger={0.025}
           distance={16}

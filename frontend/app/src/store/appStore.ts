@@ -3,7 +3,25 @@ import type { DeviceMode, Message, TraceItem } from '../api/types';
 
 export type NavItem = 'home' | 'history' | 'ideas' | 'calendar' | 'lists' | 'tasks' | 'insights';
 
+export interface UserProfile {
+  name: string;
+  email?: string;
+  avatar?: string;
+  provider?: string;
+}
+
+const getInitialUser = (): UserProfile => {
+  try {
+    const saved = localStorage.getItem('karma_user');
+    if (saved) return JSON.parse(saved);
+  } catch (e) {
+    // ignore
+  }
+  return { name: 'Shiva', email: 'shiva@example.com' };
+};
+
 interface AppState {
+  user: UserProfile | null;
   view: 'home' | 'chat';
   panelOpen: boolean;
   tracePanelOpen: boolean;
@@ -16,6 +34,7 @@ interface AppState {
   sessionId: string;
 
   // Actions
+  setUser: (user: UserProfile | null) => void;
   setView: (view: 'home' | 'chat') => void;
   setPanelOpen: (open: boolean) => void;
   togglePanel: () => void;
@@ -38,6 +57,7 @@ interface AppState {
 }
 
 export const useAppStore = create<AppState>((set) => ({
+  user: getInitialUser(),
   view: 'home',
   panelOpen: false,
   tracePanelOpen: false,
@@ -49,6 +69,14 @@ export const useAppStore = create<AppState>((set) => ({
   isStreaming: false,
   sessionId: `session_${Date.now()}`,
 
+  setUser: (user) => {
+    if (user) {
+      localStorage.setItem('karma_user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('karma_user');
+    }
+    set({ user });
+  },
   setView: (view) => set({ view }),
   setPanelOpen: (panelOpen) => set({ panelOpen }),
   togglePanel: () => set((state) => ({ panelOpen: !state.panelOpen })),

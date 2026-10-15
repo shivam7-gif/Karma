@@ -3,12 +3,16 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
+// Enable global Three.js asset cache for instantaneous subsequent loads
+THREE.Cache.enabled = true;
+
 interface Props {
   onLoad?: () => void;
+  onProgress?: (percent: number) => void;
   onClick?: () => void;
 }
 
-const AlexaViewer: React.FC<Props> = ({ onLoad, onClick }) => {
+const AlexaViewer: React.FC<Props> = ({ onLoad, onProgress, onClick }) => {
   const mountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -98,6 +102,7 @@ const AlexaViewer: React.FC<Props> = ({ onLoad, onClick }) => {
         });
 
         scene.add(model);
+        onProgress?.(100);
         onLoad?.();
 
         if (gltf.animations.length > 0) {
@@ -105,7 +110,12 @@ const AlexaViewer: React.FC<Props> = ({ onLoad, onClick }) => {
           gltf.animations.forEach((c) => mixer!.clipAction(c).play());
         }
       },
-      undefined,
+      (xhr) => {
+        if (xhr.lengthComputable && xhr.total > 0) {
+          const percent = Math.min(Math.round((xhr.loaded / xhr.total) * 100), 99);
+          onProgress?.(percent);
+        }
+      },
       (err) => console.error('GLTF load error:', err)
     );
 

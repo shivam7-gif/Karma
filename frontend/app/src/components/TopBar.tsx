@@ -5,7 +5,9 @@ import { CONFIG } from '../config';
 import { useAppStore } from '../store/appStore';
 
 export const TopBar: React.FC = () => {
-  const { tracePanelOpen, toggleTracePanel, traceItems } = useAppStore();
+  const { tracePanelOpen, toggleTracePanel, traceItems, user } = useAppStore();
+  const displayName = user?.name || CONFIG.userName || 'Shiva';
+  const initials = displayName.charAt(0).toUpperCase();
 
   return (
     <header
@@ -115,8 +117,8 @@ export const TopBar: React.FC = () => {
 
         <button
           type="button"
-          aria-label={`User profile for ${CONFIG.userName}`}
-          title={`Signed in as ${CONFIG.userName}`}
+          aria-label={`User profile for ${displayName}`}
+          title={`Signed in as ${displayName}`}
           style={{
             width: '32px',
             height: '32px',
@@ -132,6 +134,7 @@ export const TopBar: React.FC = () => {
             cursor: 'pointer',
             transition: 'all 0.15s ease',
             boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
+            overflow: 'hidden',
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.borderColor = '#2563EB';
@@ -142,7 +145,11 @@ export const TopBar: React.FC = () => {
             e.currentTarget.style.transform = 'scale(1)';
           }}
         >
-          {CONFIG.userInitials}
+          {user?.avatar ? (
+            <img src={user.avatar} alt={displayName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            initials
+          )}
         </button>
       </div>
     </header>
