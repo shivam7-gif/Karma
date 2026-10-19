@@ -3,7 +3,12 @@ import { Mic, Monitor } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 
 export const DeviceToggle: React.FC = () => {
-  const { deviceMode, setDeviceMode } = useAppStore();
+  const { deviceMode, setDeviceMode, openVoiceModal } = useAppStore();
+
+  const handleEchoClick = () => {
+    setDeviceMode('voice-only');
+    openVoiceModal();
+  };
 
   return (
     <div
@@ -22,9 +27,9 @@ export const DeviceToggle: React.FC = () => {
     >
       <button
         type="button"
-        onClick={() => setDeviceMode('voice-only')}
+        onClick={handleEchoClick}
         aria-pressed={deviceMode === 'voice-only'}
-        title="Echo (Voice only) mode"
+        title="Echo (Voice only) mode - launches Aurora Voice Agent"
         style={{
           display: 'flex',
           alignItems: 'center',

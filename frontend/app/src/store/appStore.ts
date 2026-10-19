@@ -33,7 +33,11 @@ interface AppState {
   isStreaming: boolean;
   sessionId: string;
 
+  isVoiceModalOpen: boolean;
+
   // Actions
+  openVoiceModal: () => void;
+  closeVoiceModal: () => void;
   setUser: (user: UserProfile | null) => void;
   setView: (view: 'home' | 'chat') => void;
   setPanelOpen: (open: boolean) => void;
@@ -68,7 +72,10 @@ export const useAppStore = create<AppState>((set) => ({
   traceItems: [],
   isStreaming: false,
   sessionId: `session_${Date.now()}`,
+  isVoiceModalOpen: false,
 
+  openVoiceModal: () => set({ isVoiceModalOpen: true }),
+  closeVoiceModal: () => set({ isVoiceModalOpen: false }),
   setUser: (user) => {
     if (user) {
       localStorage.setItem('karma_user', JSON.stringify(user));

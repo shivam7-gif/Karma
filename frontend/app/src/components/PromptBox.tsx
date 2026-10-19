@@ -1,7 +1,8 @@
 import React, { useRef, useEffect } from 'react';
-import { Paperclip, Mic, ArrowUp } from 'lucide-react';
+import { Paperclip, Mic, ArrowUp, Radio } from 'lucide-react';
 import { BrandRingIcon } from './BrandLogo';
 import { useSpeech } from '../hooks/useSpeech';
+import { useAppStore } from '../store/appStore';
 
 interface PromptBoxProps {
   value: string;
@@ -22,8 +23,9 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { openVoiceModal } = useAppStore();
 
-  const { isListening, toggleListening, transcript } = useSpeech({
+  const { isListening, transcript } = useSpeech({
     onTranscript: (spokenText) => {
       onChange(spokenText);
     },
@@ -62,10 +64,10 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
       className={`prompt-box-container ${isDocked ? 'docked' : ''}`}
       style={{
         width: '100%',
-        maxWidth: '640px',
+        maxWidth: isDocked ? '820px' : '640px',
         margin: '0 auto',
         position: 'relative',
-        transition: 'all var(--transition-normal)',
+        transition: 'all 0.2s ease',
         ...style,
       }}
     >
@@ -175,12 +177,47 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
             <Paperclip size={16} />
           </button>
 
+          {/* Voice Agent Mode Button */}
+          <button
+            type="button"
+            onClick={openVoiceModal}
+            aria-label="Open Voice Agent Mode"
+            title="Launch Voice Agent Aurora Orb"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '4px 10px',
+              borderRadius: '9999px',
+              background: 'linear-gradient(135deg, #EFF6FF 0%, #F5F3FF 100%)',
+              border: '1px solid #BFDBFE',
+              color: '#2563EB',
+              fontSize: '11.5px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.04)';
+              e.currentTarget.style.borderColor = '#93C5FD';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.borderColor = '#BFDBFE';
+            }}
+          >
+            <Radio size={12} />
+            <span>Voice</span>
+          </button>
+
           {/* Mic Button */}
           <button
             type="button"
-            onClick={toggleListening}
-            aria-label={isListening ? 'Stop listening' : 'Start voice input'}
-            title={isListening ? 'Stop recording' : 'Voice input (Web Speech)'}
+            onClick={() => {
+              openVoiceModal();
+            }}
+            aria-label="Start voice input"
+            title="Launch Voice Agent"
             style={{
               width: '32px',
               height: '32px',

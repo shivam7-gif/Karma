@@ -5,8 +5,9 @@ import { Greeting } from './Greeting';
 import { PromptBox } from './PromptBox';
 import { SuggestionChips } from './SuggestionChips';
 import { ListPanel } from './ListPanel';
-import { ChatView } from './ChatView';
 import { TracePanel } from './TracePanel';
+import { ChatView } from './ChatView';
+import VoicePanel from './chat-ai/VoicePanel';
 import { useAppStore } from '../store/appStore';
 import { useChatStream } from '../hooks/useChatStream';
 
@@ -19,6 +20,9 @@ export const AppShell: React.FC = () => {
     setInputValue,
     isStreaming,
     answerElicitation,
+    isVoiceModalOpen,
+    closeVoiceModal,
+    messages,
   } = useAppStore();
 
   const { handleSendMessage } = useChatStream();
@@ -86,7 +90,7 @@ export const AppShell: React.FC = () => {
           position: 'relative',
           zIndex: 10,
           overflow: 'hidden',
-          padding: '0 32px 24px 32px',
+          padding: view === 'chat' ? '0 16px 16px 88px' : '0 32px 24px 32px',
         }}
       >
         {view === 'home' ? (
@@ -118,7 +122,7 @@ export const AppShell: React.FC = () => {
             <SuggestionChips onSelectPrompt={onSelectChip} />
           </div>
         ) : (
-          /* Conversation Mode: Chat Transcript with Bottom Docked Input */
+          /* Conversation Mode: Dashboard Natural Chat Section */
           <div
             className="conversation-container"
             style={{
@@ -152,6 +156,16 @@ export const AppShell: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Global Voice Agent Modal (Aurora Orb with SoftAurora) */}
+      <VoicePanel
+        isOpen={isVoiceModalOpen}
+        onClose={closeVoiceModal}
+        onSendMessage={async (spokenText) => {
+          handleSendMessage(spokenText);
+        }}
+        latestAssistantReply={[...messages].reverse().find((m) => m.sender === 'assistant')?.text}
+      />
 
       {/* Slide-over Lists Panel */}
       <ListPanel

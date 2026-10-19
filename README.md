@@ -202,24 +202,79 @@ npx @modelcontextprotocol/inspector http://localhost:3000/mcp
 ├── README.md                     # Project documentation
 ├── backend/
 │   ├── .env                      # Local backend configuration (git-ignored)
-│   ├── package.json              # Express, LangChain Bedrock, LangGraph, MCP SDK
+│   ├── package.json              # Express, LangChain Bedrock, LangGraph, dotenv
 │   ├── tsconfig.json             # ES2022 NodeNext TypeScript configuration
-│   ├── mcp/
-│   │   └── server.ts             # Streamable HTTP MCP server entry point
 │   └── src/
-│       └── index.ts              # Express API server entry point
+│       └── index.ts              # Express API server with SSE /api/chat streaming endpoint
 ├── frontend/
 │   └── app/
 │       ├── package.json          # React 19, Three.js, Lucide, Zustand, Vite
 │       ├── vite.config.ts        # Vite build & dev server configuration
 │       └── src/
 │           ├── api/              # SSE streaming client, contracts, and mock engine
-│           ├── components/       # UI shell, 3D AlexaViewer, VoiceOrb, TracePanel
-│           ├── hooks/            # Web Speech API & chat stream hooks
+│           ├── components/       # UI shell, TopBar, SideNav
+│           │   └── chat-ai/      # Chat A.I text chat & Voice Agent mode:
+│           │       ├── SoftAurora.tsx    # WebGL2 procedural aurora shader component
+│           │       ├── SoftAurora.css    # Shader layout styling
+│           │       ├── AuroraOrb.tsx     # 220px circular audio-reactive aurora orb
+│           │       ├── VoicePanel.tsx    # Interactive voice agent modal with synchronized captioning
+│           │       ├── MessageBubble.tsx # Markdown streaming messages with code block copy buttons
+│           │       ├── MessageActions.tsx# Feedback, copy, and regenerate action bar
+│           │       ├── ChatInput.tsx     # Floating pill-shaped input with Voice & mic buttons
+│           │       └── ChatWindow.tsx    # ChatGPT-style centered chat card with zoom controls
+│           ├── hooks/            # useAudioLevel (RMS multi-band analyzer), useSpeech, useChatStream
 │           ├── pages/            # Landing, Login, Signup, and Dashboard
 │           └── store/            # Zustand state management
 └── skills/                       <!-- TODO: Add karma/SKILL.md for agent guidance -->
 ```
+
+---
+
+## Chat A.I & Voice Agent Mode
+
+### Quickstart Setup
+
+1. **Install Dependencies**:
+```bash
+# Install backend packages
+cd backend
+npm install
+
+# Install frontend packages
+cd ../frontend/app
+npm install
+```
+
+2. **Environment Variables**:
+Create `backend/.env` with your API keys:
+```env
+PORT=3000
+NODE_ENV=development
+FRONTEND_URL=http://localhost:5173
+
+# Optional: LLM streaming proxy (OpenAI or Groq)
+# If left blank, the built-in intelligent streaming engine provides instant replies!
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL=gpt-4o-mini
+# GROQ_API_KEY=your_groq_api_key_here
+```
+
+3. **Run the Application**:
+```bash
+# Terminal 1: Start Backend (Express SSE streaming proxy on port 3000)
+cd backend
+npm start
+
+# Terminal 2: Start Frontend (Vite on port 5173)
+cd frontend/app
+npm run dev
+```
+
+4. **Features & Voice Modes**:
+- **Text Chat Section**: Centered white chat card with light-lavender background, Markdown code blocks with copy buttons, message actions (thumbs up/down, copy, regenerate), zoom control (`- 100% +`), and fullscreen mode.
+- **Voice Agent Mode (`<SoftAurora />` Orb)**: Click the **Voice** button or **Mic** button in the dashboard or toggle **Echo** mode to launch the 220px animated aurora orb.
+- **Speech Audio Reactivity**: The orb reacts across 3 frequency bands (word-level swell, per-syllable pulse, fast jitter) using `useAudioLevel` and Web Audio API `AnalyserNode`, modulating noise amplitude, brightness, octave decay, and wave flow in real time!
+
 
 ---
 
