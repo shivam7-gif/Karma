@@ -5,7 +5,7 @@ import { useAppStore } from '../store/appStore';
 export const DeviceToggle: React.FC = () => {
   const { deviceMode, setDeviceMode, openVoiceModal } = useAppStore();
 
-  const handleEchoClick = () => {
+  const handleVoiceClick = () => {
     setDeviceMode('voice-only');
     openVoiceModal();
   };
@@ -13,93 +13,93 @@ export const DeviceToggle: React.FC = () => {
   return (
     <div
       role="group"
-      aria-label="Device simulation mode"
+      aria-label="Interface mode toggle"
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        background: '#FFFFFF',
-        border: '1px solid #E2E8F0',
-        borderRadius: '9999px',
+        background: '#ffffff',
+        border: '1px solid var(--border-glass, #e7e2d8)',
+        borderRadius: 'var(--r-full, 9999px)',
         padding: '3px',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
+        boxShadow: 'var(--shadow-soft, 0 1px 3px rgba(0, 0, 0, 0.03))',
         gap: '2px',
       }}
     >
       <button
         type="button"
-        onClick={handleEchoClick}
+        onClick={handleVoiceClick}
         aria-pressed={deviceMode === 'voice-only'}
-        title="Echo (Voice only) mode - launches Aurora Voice Agent"
+        title="Voice mode: launch the full-screen animated aurora orb"
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: '6px',
           padding: '4px 10px',
-          borderRadius: '9999px',
+          borderRadius: 'var(--r-full, 9999px)',
           border: 'none',
           cursor: 'pointer',
           fontSize: '12px',
           fontWeight: 500,
-          fontFamily: 'inherit',
-          transition: 'all 0.15s ease',
-          background: deviceMode === 'voice-only' ? '#2563EB' : 'transparent',
-          color: deviceMode === 'voice-only' ? '#FFFFFF' : '#64748B',
-          boxShadow: deviceMode === 'voice-only' ? '0 1px 2px rgba(0, 0, 0, 0.08)' : 'none',
+          fontFamily: 'var(--font-sans)',
+          transition: 'all var(--transition-hover, 120ms ease)',
+          background: deviceMode === 'voice-only' ? 'var(--accent, #8b3dff)' : 'transparent',
+          color: deviceMode === 'voice-only' ? '#ffffff' : 'var(--text-secondary, #575260)',
         }}
         onMouseEnter={(e) => {
           if (deviceMode !== 'voice-only') {
-            e.currentTarget.style.color = '#0F172A';
-            e.currentTarget.style.background = '#F1F5F9';
+            e.currentTarget.style.color = 'var(--text-primary, #19161d)';
+            e.currentTarget.style.background = 'var(--surface-glass-hover, #f5f2ec)';
           }
         }}
         onMouseLeave={(e) => {
           if (deviceMode !== 'voice-only') {
-            e.currentTarget.style.color = '#64748B';
+            e.currentTarget.style.color = 'var(--text-secondary, #575260)';
             e.currentTarget.style.background = 'transparent';
           }
         }}
       >
-        <Mic size={13} />
-        <span>Echo</span>
+        <Mic size={13} strokeWidth={1.8} />
+        <span>Voice</span>
       </button>
 
       <button
         type="button"
         onClick={() => setDeviceMode('screen')}
         aria-pressed={deviceMode === 'screen'}
-        title="Echo Show (Screen + Voice) mode"
+        title="Screen mode: conversational transcript and cards"
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: '6px',
           padding: '4px 10px',
-          borderRadius: '9999px',
+          borderRadius: 'var(--r-full, 9999px)',
           border: 'none',
           cursor: 'pointer',
           fontSize: '12px',
           fontWeight: 500,
-          fontFamily: 'inherit',
-          transition: 'all 0.15s ease',
-          background: deviceMode === 'screen' ? '#2563EB' : 'transparent',
-          color: deviceMode === 'screen' ? '#FFFFFF' : '#64748B',
-          boxShadow: deviceMode === 'screen' ? '0 1px 2px rgba(0, 0, 0, 0.08)' : 'none',
+          fontFamily: 'var(--font-sans)',
+          transition: 'all var(--transition-hover, 120ms ease)',
+          background: deviceMode === 'screen' ? 'var(--accent, #8b3dff)' : 'transparent',
+          color: deviceMode === 'screen' ? '#ffffff' : 'var(--text-secondary, #575260)',
         }}
         onMouseEnter={(e) => {
           if (deviceMode !== 'screen') {
-            e.currentTarget.style.color = '#0F172A';
-            e.currentTarget.style.background = '#F1F5F9';
+            e.currentTarget.style.color = 'var(--text-primary, #19161d)';
+            e.currentTarget.style.background = 'var(--surface-glass-hover, #f5f2ec)';
           }
         }}
         onMouseLeave={(e) => {
           if (deviceMode !== 'screen') {
-            e.currentTarget.style.color = '#64748B';
+            e.currentTarget.style.color = 'var(--text-secondary, #575260)';
             e.currentTarget.style.background = 'transparent';
           }
         }}
       >
-        <Monitor size={13} />
-        <span>Echo Show</span>
+        <Monitor size={13} strokeWidth={1.8} />
+        <span>Screen</span>
       </button>
     </div>
   );
 };
+
+export default DeviceToggle;

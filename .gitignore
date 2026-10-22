@@ -128,6 +128,17 @@ chroma_db/
 faiss_index/
 data/vectorstore/
 
+# Runtime Session & Task Data
+backend/data/*.json
+data/*.json
+!backend/data/.gitkeep
+
+# Test Artifacts, Debug Screenshots & Traces
+backend/test/*.png
+backend/test/*.jpg
+backend/test/*.jpeg
+*.debug.png
+*-debug.png
 
 # ------------------------------------------------------------------------------
 # IDEs & Code Editors
@@ -143,7 +154,11 @@ data/vectorstore/
 *.njsproj
 *.sln
 
-# VS Code - ignore workspace state but allow shared config recommendations
+# VS Code & Extension Packaging
+*.vsix
+.vscode-test/
+vscode-extension/dist/
+vscode-extension/out/
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json

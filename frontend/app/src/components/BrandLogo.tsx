@@ -19,8 +19,8 @@ export const BrandRingIcon: React.FC<{ size?: number; className?: string }> = ({
     >
       <defs>
         <linearGradient id="brandRingGrad" x1="2" y1="2" x2="26" y2="26" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#3B82F6" />
-          <stop offset="100%" stopColor="#1D4ED8" />
+          <stop offset="0%" stopColor="#c084fc" />
+          <stop offset="100%" stopColor="#8b3dff" />
         </linearGradient>
       </defs>
       {/* Outer refined ring */}
@@ -29,7 +29,7 @@ export const BrandRingIcon: React.FC<{ size?: number; className?: string }> = ({
         cy="14"
         r="11"
         stroke="url(#brandRingGrad)"
-        strokeWidth="2.5"
+        strokeWidth="2.4"
         strokeLinecap="round"
         strokeDasharray="50 16"
         transform="rotate(-45 14 14)"
@@ -39,14 +39,14 @@ export const BrandRingIcon: React.FC<{ size?: number; className?: string }> = ({
         cx="14"
         cy="5.5"
         r="2.2"
-        fill="#2563EB"
+        fill="#8b3dff"
       />
       <circle
         cx="14"
         cy="14"
         r="3"
-        fill="#2563EB"
-        opacity="0.85"
+        fill="#8b3dff"
+        opacity="0.9"
       />
     </svg>
   );

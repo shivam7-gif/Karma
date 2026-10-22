@@ -1,66 +1,81 @@
 :root {
-  /* Colors - Clean White with Soft Bluish Tint */
-  --bg-page: #FFFFFF;
-  --bg-app-gradient: radial-gradient(ellipse 95% 75% at 50% 20%, #EBF4FF 0%, #F5F9FF 45%, #FFFFFF 100%);
-  --bg-glow: radial-gradient(circle at 50% 50%, rgba(191, 219, 254, 0.35), transparent 70%);
+  /* Warm off-white page canvas & aurora magenta/violet accent */
+  --bg-app: #faf8f5;
+  --bg-page: #faf8f5;
+  --bg-card: #ffffff;
   
-  --surface-glass: rgba(255, 255, 255, 0.85);
-  --surface-glass-hover: #F8FAFC;
-  --surface-glass-active: #F1F5F9;
-  --surface-glass-strong: rgba(255, 255, 255, 0.95);
-  --surface-glass-panel: #FFFFFF;
+  --accent: #8b3dff;
+  --accent-soft: rgba(139, 61, 255, 0.08);
+  --accent-subtle: rgba(139, 61, 255, 0.14);
+  --accent-hover: #752fe6;
 
-  --border-glass: #E2E8F0;
-  --border-glass-light: #CBD5E1;
-  --border-focus: #2563EB;
+  --surface-glass: rgba(255, 255, 255, 0.92);
+  --surface-glass-hover: #f5f2ec;
+  --surface-glass-active: #ebe6dc;
 
-  --text-primary: #0F172A;
-  --text-secondary: #475569;
-  --text-muted: #94A3B8;
-  --text-accent: #2563EB;
-  --text-accent-hover: #1D4ED8;
+  --border-glass: #e7e2d8;
+  --border-glass-light: #ded8cd;
+  --border-focus: #8b3dff;
 
-  --accent-blue: #2563EB;
-  --accent-blue-subtle: #EFF6FF;
-  --accent-glow: none; /* No neon glow */
+  --text-primary: #19161d;
+  --text-secondary: #575260;
+  --text-muted: #8e8798;
+  --text-accent: #8b3dff;
+  --text-accent-hover: #752fe6;
 
-  --status-success: #10B981;
-  --status-warning: #F59E0B;
-  --status-error: #EF4444;
+  --status-success: #10b981;
+  --status-warning: #f59e0b;
+  --status-error: #ef4444;
 
   /* Typography */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-  --text-greeting-size: clamp(2rem, 4vw, 2.5rem);
-  --text-greeting-weight: 600;
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 
-  /* Geometry & Spacing */
-  --radius-outer: 0px;
-  --radius-full: 9999px;
-  --radius-xl: 16px;
-  --radius-lg: 12px;
-  --radius-md: 8px;
-  --radius-sm: 6px;
+  /* Radius hierarchy */
+  --r-sm: 10px;       /* small buttons */
+  --r-md: 14px;       /* cards / inner panels */
+  --r-lg: 16px;       /* input bar / modal cards */
+  --r-full: 9999px;   /* small tags and chips only */
 
-  --blur-glass: blur(16px);
-  --blur-heavy: blur(24px);
+  /* Purposeful micro-transitions */
+  --transition-hover: 120ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-normal: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-modal: 220ms cubic-bezier(0.16, 1, 0.3, 1);
 
-  /* Transitions */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* Clean subtle shadows */
+  --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 4px 20px rgba(25, 22, 29, 0.05);
+  --shadow-panel: -4px 0 28px rgba(25, 22, 29, 0.07);
+  --shadow-input: 0 4px 20px rgba(139, 61, 255, 0.05), 0 1px 3px rgba(0, 0, 0, 0.04);
+}
 
-  /* Shadows - Soft, Elegant, Non-neon */
-  --shadow-app: none;
-  --shadow-glass: 0 4px 20px rgba(0, 0, 0, 0.05);
-  --shadow-panel: -4px 0 24px rgba(0, 0, 0, 0.08);
-  --shadow-input: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+@keyframes messageFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes orbScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :root {
-    --transition-fast: 0ms;
-    --transition-normal: 0ms;
-    --transition-slow: 0ms;
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
 }

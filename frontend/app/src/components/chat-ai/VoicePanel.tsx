@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Mic, MicOff, Sparkles, Send } from 'lucide-react';
+import { X, Mic } from 'lucide-react';
 import AuroraOrb, { type VoiceState } from './AuroraOrb';
 import { useAudioLevel } from '../../hooks/useAudioLevel';
 
@@ -20,7 +20,6 @@ export const VoicePanel: React.FC<VoicePanelProps> = ({
   const [userTranscript, setUserTranscript] = useState('');
   const [spokenCaption, setSpokenCaption] = useState<string[]>([]);
   const [activeWordIndex, setActiveWordIndex] = useState<number>(-1);
-  const [hasStartedAudio, setHasStartedAudio] = useState(false);
 
   const {
     audioLevelRef,
@@ -51,6 +50,7 @@ export const VoicePanel: React.FC<VoicePanelProps> = ({
           const transcriptPiece = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
             setUserTranscript(transcriptPiece);
+            handleSubmitPrompt(transcriptPiece);
           } else {
             interim += transcriptPiece;
           }
@@ -111,7 +111,6 @@ export const VoicePanel: React.FC<VoicePanelProps> = ({
 
   // Click-to-start activation (required by iOS / Safari for AudioContext)
   const handleActivateVoice = async () => {
-    setHasStartedAudio(true);
     const micStarted = await startMic();
     if (micStarted) {
       setVoiceState('listening');
@@ -198,6 +197,18 @@ export const VoicePanel: React.FC<VoicePanelProps> = ({
     }
   }, [latestAssistantReply, isOpen, voiceState]);
 
+  // Listen for Escape key to close modal
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   // Submit spoken text
   const handleSubmitPrompt = async (textToSend?: string) => {
     const text = textToSend || userTranscript;
@@ -224,10 +235,20 @@ export const VoicePanel: React.FC<VoicePanelProps> = ({
 
   if (!isOpen) return null;
 
+  // Dynamic status text
+  const statusLine =
+    voiceState === 'listening'
+      ? 'Listening…'
+      : voiceState === 'thinking'
+      ? 'Thinking…'
+      : voiceState === 'speaking'
+      ? 'Speaking…'
+      : 'Tap to talk';
+
   return (
     <div
       role="dialog"
-      aria-label="Voice Agent Mode"
+      aria-label="Karma Voice Mode"
       aria-modal="true"
       style={{
         position: 'fixed',
@@ -236,91 +257,75 @@ export const VoicePanel: React.FC<VoicePanelProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'rgba(15, 23, 42, 0.72)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        animation: 'fadeIn 0.25s ease-out',
-        padding: '20px',
+        background: '#0b0a10',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        animation: 'voiceOverlayFadeIn 0.25s ease-out',
+        padding: '24px',
       }}
     >
-      {/* Voice Agent Modal Container */}
+      {/* Voice Modal Container with scale-in transition */}
       <div
         style={{
           width: '100%',
-          maxWidth: '520px',
-          background: 'linear-gradient(180deg, #0e1322 0%, #070913 100%)',
-          border: '1px solid rgba(255, 255, 255, 0.14)',
-          borderRadius: '28px',
-          boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 40px rgba(99, 102, 241, 0.15)',
-          padding: '28px 24px 32px 24px',
+          maxWidth: '480px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           position: 'relative',
-          overflow: 'hidden',
+          animation: 'voiceOrbScaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
-        {/* Top Header Controls */}
+        {/* Top Header Bar */}
         <div
           style={{
             width: '100%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            marginBottom: '20px',
+            marginBottom: '32px',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span
               style={{
-                width: '8px',
-                height: '8px',
+                width: '7px',
+                height: '7px',
                 borderRadius: '50%',
                 background:
                   voiceState === 'listening'
                     ? '#38bdf8'
                     : voiceState === 'speaking'
-                    ? '#e100ff'
+                    ? 'var(--accent, #8b3dff)'
                     : voiceState === 'thinking'
                     ? '#c084fc'
-                    : '#94a3b8',
+                    : '#64748b',
                 boxShadow:
                   voiceState === 'listening'
                     ? '0 0 10px #38bdf8'
                     : voiceState === 'speaking'
-                    ? '0 0 12px #e100ff'
+                    ? '0 0 12px var(--accent, #8b3dff)'
                     : 'none',
               }}
             />
             <span
               style={{
                 fontSize: '13px',
-                fontWeight: 600,
+                fontWeight: 500,
                 color: '#e2e8f0',
-                letterSpacing: '0.04em',
-                textTransform: 'uppercase',
+                letterSpacing: '-0.01em',
+                fontFamily: 'var(--font-sans)',
               }}
             >
-              Voice Agent Mode
-            </span>
-            <span
-              style={{
-                fontSize: '11px',
-                padding: '2px 8px',
-                borderRadius: '9999px',
-                background: 'rgba(255,255,255,0.08)',
-                color: '#94a3b8',
-                marginLeft: '4px',
-              }}
-            >
-              {voiceState}
+              Karma Voice
             </span>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close voice panel"
+            aria-label="Close voice mode (Esc)"
+            title="Close (Esc)"
             style={{
               width: '32px',
               height: '32px',
@@ -348,7 +353,7 @@ export const VoicePanel: React.FC<VoicePanelProps> = ({
         </div>
 
         {/* 220px Circular Aurora Orb with SoftAurora */}
-        <div style={{ margin: '14px 0 24px 0' }}>
+        <div style={{ margin: '8px 0 28px 0' }}>
           <AuroraOrb
             size={220}
             state={voiceState}
@@ -357,16 +362,16 @@ export const VoicePanel: React.FC<VoicePanelProps> = ({
           />
         </div>
 
-        {/* Live Caption Under Orb with Spoken Words Highlighting One by One */}
+        {/* Dynamic Status / Caption Area */}
         <div
           style={{
-            minHeight: '64px',
-            maxHeight: '110px',
+            minHeight: '60px',
+            maxHeight: '120px',
             width: '100%',
             overflowY: 'auto',
             textAlign: 'center',
-            padding: '8px 16px',
-            marginBottom: '20px',
+            padding: '4px 16px',
+            marginBottom: '32px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -377,8 +382,9 @@ export const VoicePanel: React.FC<VoicePanelProps> = ({
               style={{
                 fontSize: '15px',
                 lineHeight: 1.6,
-                color: 'rgba(255,255,255,0.7)',
+                color: 'rgba(255, 255, 255, 0.75)',
                 margin: 0,
+                fontFamily: 'var(--font-sans)',
               }}
             >
               {spokenCaption.map((word, idx) => {
@@ -389,10 +395,10 @@ export const VoicePanel: React.FC<VoicePanelProps> = ({
                     style={{
                       display: 'inline-block',
                       marginRight: '5px',
-                      color: isActive ? '#f0abfc' : 'rgba(255,255,255,0.75)',
-                      fontWeight: isActive ? 700 : 400,
+                      color: isActive ? '#f0abfc' : 'rgba(255, 255, 255, 0.75)',
+                      fontWeight: isActive ? 600 : 400,
                       textShadow: isActive ? '0 0 12px rgba(240, 171, 252, 0.8)' : 'none',
-                      transform: isActive ? 'scale(1.08)' : 'scale(1)',
+                      transform: isActive ? 'scale(1.06)' : 'scale(1)',
                       transition: 'all 0.12s ease',
                     }}
                   >
@@ -409,122 +415,123 @@ export const VoicePanel: React.FC<VoicePanelProps> = ({
                 color: '#38bdf8',
                 fontWeight: 500,
                 margin: 0,
+                fontFamily: 'var(--font-sans)',
               }}
             >
-              "{userTranscript}"
+              “{userTranscript}”
             </p>
           ) : (
             <p
               style={{
                 fontSize: '14px',
-                color: '#64748B',
+                color: '#94a3b8',
                 margin: 0,
-                fontStyle: 'italic',
+                fontWeight: 400,
+                letterSpacing: '-0.01em',
+                fontFamily: 'var(--font-sans)',
               }}
             >
-              {!hasStartedAudio
-                ? 'Tap mic or orb to start listening'
-                : voiceState === 'listening'
-                ? 'Listening to your voice...'
-                : voiceState === 'thinking'
-                ? 'Synthesizing response...'
-                : 'Ready'}
+              {statusLine}
             </p>
           )}
         </div>
 
-        {/* Bottom Interactive Voice Controls */}
+        {/* Exactly two bottom controls: Mic Toggle and Close */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '14px',
-            width: '100%',
+            gap: '12px',
             justifyContent: 'center',
           }}
         >
-          {/* Mic Toggle Button */}
+          {/* Button 1: Mic Toggle (Talk / Stop) */}
           <button
             type="button"
             onClick={handleToggleMic}
-            aria-label={isMicActive ? 'Mute microphone' : 'Unmute microphone'}
+            aria-label={isMicActive ? 'Stop listening' : 'Start talking'}
             style={{
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
               gap: '8px',
-              padding: '10px 20px',
-              borderRadius: '9999px',
+              padding: '10px 22px',
+              borderRadius: 'var(--r-full, 9999px)',
               border: isMicActive
-                ? '1px solid rgba(56, 189, 248, 0.5)'
-                : '1px solid rgba(255, 255, 255, 0.15)',
+                ? '1px solid rgba(239, 68, 68, 0.5)'
+                : '1px solid rgba(139, 61, 255, 0.4)',
               background: isMicActive
-                ? 'linear-gradient(135deg, rgba(2, 132, 199, 0.3) 0%, rgba(56, 189, 248, 0.2) 100%)'
-                : 'rgba(255, 255, 255, 0.08)',
-              color: isMicActive ? '#38bdf8' : '#e2e8f0',
+                ? 'rgba(239, 68, 68, 0.15)'
+                : 'var(--accent, #8b3dff)',
+              color: '#ffffff',
               fontSize: '14px',
-              fontWeight: 600,
+              fontWeight: 500,
+              fontFamily: 'var(--font-sans)',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
-              boxShadow: isMicActive ? '0 0 20px rgba(56, 189, 248, 0.25)' : 'none',
+              boxShadow: isMicActive
+                ? '0 0 16px rgba(239, 68, 68, 0.3)'
+                : '0 2px 14px rgba(139, 61, 255, 0.35)',
             }}
           >
-            {isMicActive ? <Mic size={18} /> : <MicOff size={18} />}
-            <span>{isMicActive ? 'Listening' : 'Start Mic'}</span>
+            <Mic size={16} strokeWidth={2} />
+            <span>{isMicActive ? 'Stop' : 'Talk'}</span>
           </button>
 
-          {/* If transcript exists, allow sending it */}
-          {userTranscript && (
-            <button
-              type="button"
-              onClick={() => handleSubmitPrompt()}
-              aria-label="Send spoken prompt"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '10px 20px',
-                borderRadius: '9999px',
-                border: 'none',
-                background: '#2563EB',
-                color: '#ffffff',
-                fontSize: '14px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                boxShadow: '0 4px 14px rgba(37, 99, 235, 0.4)',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              <span>Ask</span>
-              <Send size={15} />
-            </button>
-          )}
-
-          {/* Quick Demo Voice trigger */}
+          {/* Button 2: Close Modal Button */}
           <button
             type="button"
-            onClick={() => {
-              handleSubmitPrompt('Give me a brief overview of the Aurora Voice Agent mode');
-            }}
-            aria-label="Demo Voice Agent"
-            title="Trigger demo speech synthesis"
+            onClick={onClose}
+            aria-label="Close voice mode"
             style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '50%',
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              background: 'rgba(255, 255, 255, 0.08)',
+              gap: '6px',
+              padding: '10px 18px',
+              borderRadius: 'var(--r-full, 9999px)',
               border: '1px solid rgba(255, 255, 255, 0.15)',
-              color: '#e2e8f0',
+              background: 'rgba(255, 255, 255, 0.08)',
+              color: '#cbd5e1',
+              fontSize: '14px',
+              fontWeight: 500,
+              fontFamily: 'var(--font-sans)',
               cursor: 'pointer',
               transition: 'all 0.15s ease',
             }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.14)';
+              e.currentTarget.style.color = '#ffffff';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+              e.currentTarget.style.color = '#cbd5e1';
+            }}
           >
-            <Sparkles size={18} />
+            <X size={16} />
+            <span>Close</span>
           </button>
         </div>
       </div>
+
+      <style>{`
+        @keyframes voiceOverlayFadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        @keyframes voiceOrbScaleIn {
+          from {
+            transform: scale(0.65) translateY(30px);
+            opacity: 0;
+          }
+          to {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+          }
+        }
+      `}</style>
     </div>
   );
 };

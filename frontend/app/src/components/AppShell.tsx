@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { TopBar } from './TopBar';
 import { SideNav } from './SideNav';
 import { Greeting } from './Greeting';
@@ -8,12 +9,18 @@ import { ListPanel } from './ListPanel';
 import { TracePanel } from './TracePanel';
 import { ChatView } from './ChatView';
 import VoicePanel from './chat-ai/VoicePanel';
+import SoftAurora from './chat-ai/SoftAurora';
+import { SettingsModal } from './SettingsModal';
+import { IdeWorkspaceView } from './ide/IdeWorkspaceView';
 import { useAppStore } from '../store/appStore';
 import { useChatStream } from '../hooks/useChatStream';
 
 export const AppShell: React.FC = () => {
+  const location = useLocation();
   const {
     view,
+    setView,
+    setActiveNav,
     panelOpen,
     setPanelOpen,
     inputValue,
@@ -22,8 +29,17 @@ export const AppShell: React.FC = () => {
     answerElicitation,
     isVoiceModalOpen,
     closeVoiceModal,
+    isSettingsOpen,
+    closeSettings,
     messages,
   } = useAppStore();
+
+  useEffect(() => {
+    if (location.pathname === '/ide' || location.search.includes('view=ide')) {
+      setView('ide');
+      setActiveNav('ide');
+    }
+  }, [location.pathname, location.search, setView, setActiveNav]);
 
   const { handleSendMessage } = useChatStream();
 
@@ -51,7 +67,7 @@ export const AppShell: React.FC = () => {
         maxHeight: 'none',
         borderRadius: 0,
         position: 'relative',
-        background: 'radial-gradient(ellipse 95% 75% at 50% 20%, #EBF4FF 0%, #F5F9FF 45%, #FFFFFF 100%)',
+        background: 'var(--bg-app, #faf8f5)',
         boxShadow: 'none',
         display: 'flex',
         flexDirection: 'column',
@@ -59,22 +75,6 @@ export const AppShell: React.FC = () => {
         border: 'none',
       }}
     >
-      {/* Ambient center soft blue glow behind content */}
-      <div
-        className="ambient-glow-sphere"
-        style={{
-          position: 'absolute',
-          top: '40%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: '720px',
-          height: '460px',
-          background: 'radial-gradient(ellipse, rgba(191, 219, 254, 0.35) 0%, rgba(219, 234, 254, 0.15) 50%, transparent 70%)',
-          pointerEvents: 'none',
-          zIndex: 1,
-        }}
-      />
-
       {/* Top Bar */}
       <TopBar />
 
@@ -90,11 +90,13 @@ export const AppShell: React.FC = () => {
           position: 'relative',
           zIndex: 10,
           overflow: 'hidden',
-          padding: view === 'chat' ? '0 16px 16px 88px' : '0 32px 24px 32px',
+          padding: view === 'ide' ? '0 0 0 84px' : view === 'chat' ? '0 24px 16px 88px' : '0 32px 24px 32px',
         }}
       >
-        {view === 'home' ? (
-          /* Home Screen: Vertically Centered Greeting + Prompt + Chips */
+        {view === 'ide' ? (
+          <IdeWorkspaceView />
+        ) : view === 'home' ? (
+          /* Home Screen: Vertically Centered Greeting + Prompt + Chips with SoftAurora ambient background */
           <div
             className="home-center-hero"
             style={{
@@ -107,19 +109,51 @@ export const AppShell: React.FC = () => {
               maxWidth: '680px',
               margin: '0 auto',
               paddingBottom: '40px',
+              position: 'relative',
               animation: 'fadeIn 0.3s ease-out',
             }}
           >
-            <Greeting />
+            {/* Ambient SoftAurora background behind greeting (low opacity, lightMode) */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -55%)',
+                width: '680px',
+                height: '380px',
+                borderRadius: '50%',
+                overflow: 'hidden',
+                pointerEvents: 'none',
+                zIndex: 0,
+                filter: 'blur(10px)',
+              }}
+            >
+              <SoftAurora
+                speed={0.25}
+                scale={1.6}
+                brightness={0.8}
+                opacity={0.3}
+                lightMode={true}
+                color1="#f5f2ec"
+                color2="#8b3dff"
+                intro={false}
+                enableMouseInteraction={false}
+              />
+            </div>
 
-            <PromptBox
-              value={inputValue}
-              onChange={setInputValue}
-              onSubmit={onSubmitPrompt}
-              disabled={isStreaming}
-            />
+            <div style={{ position: 'relative', zIndex: 1, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <Greeting />
 
-            <SuggestionChips onSelectPrompt={onSelectChip} />
+              <PromptBox
+                value={inputValue}
+                onChange={setInputValue}
+                onSubmit={onSubmitPrompt}
+                disabled={isStreaming}
+              />
+
+              <SuggestionChips onSelectPrompt={onSelectChip} />
+            </div>
           </div>
         ) : (
           /* Conversation Mode: Dashboard Natural Chat Section */
@@ -165,6 +199,12 @@ export const AppShell: React.FC = () => {
           handleSendMessage(spokenText);
         }}
         latestAssistantReply={[...messages].reverse().find((m) => m.sender === 'assistant')?.text}
+      />
+
+      {/* AI Engine & OpenRouter BYOK Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={closeSettings}
       />
 
       {/* Slide-over Lists Panel */}

@@ -21,10 +21,41 @@ export async function simulateMockStream(
     let toolName = 'home_assistant_core';
     let toolArgs: Record<string, unknown> = { query: text };
     let toolResult: Record<string, unknown> | string = { status: 'ok', matched_intent: 'general_query' };
-    let replyText = `I looked into "${text}" for you. Here is what you need to know.`;
+    let replyText = `Regarding **${text}**, everything is synced and ready. Where would you like to start?`;
     let elicitation: { id: string; question: string; options: string[] } | null = null;
 
-    if (lower.includes('list') || lower.includes('shop') || lower.includes('grocery')) {
+    if (/^(hi|hello|hey|good\s*(morning|afternoon|evening))\b/i.test(lower)) {
+      toolName = 'conversation_agent';
+      toolArgs = { intent: 'greeting' };
+      toolResult = { greeting: 'acknowledged' };
+      replyText = 'Hey Shiva, what are we working on?';
+    } else if (lower.includes('meeting') || lower.includes('summarize')) {
+      toolName = 'calendar_retrieval';
+      toolArgs = { query: 'last_meeting' };
+      toolResult = { meeting: 'Architecture Sync', participants: 4 };
+      replyText =
+        'Your last meeting was the **Architecture Sync**:\n\n' +
+        '• Finalized the WebSocket and SSE streaming pipeline for real-time trace.\n' +
+        '• Confirmed the MCP schema integration for lists and calendars.\n' +
+        '• Next step: verify the voice synthesis latency benchmarks.';
+    } else if (lower.includes('calendar') || lower.includes('tomorrow')) {
+      toolName = 'calendar_query';
+      toolArgs = { date: 'tomorrow' };
+      toolResult = { events_count: 3 };
+      replyText =
+        'Here’s what’s on your calendar for tomorrow:\n\n' +
+        '• **10:00 AM** — Product Design Review\n' +
+        '• **02:30 PM** — Deep Dive on Agentic Workflows\n' +
+        '• **05:00 PM** — Team Standup';
+    } else if (lower.includes('document') || lower.includes('find')) {
+      toolName = 'workspace_search';
+      toolArgs = { query: 'documents' };
+      toolResult = { matches: 2 };
+      replyText =
+        'Found 2 relevant documents in your workspace:\n\n' +
+        '1. **`specs/voice-engine-v2.md`** — Updated with latency benchmarks.\n' +
+        '2. **`notes/mcp-contracts.pdf`** — Tool specifications for search and navigation.';
+    } else if (lower.includes('list') || lower.includes('shop') || lower.includes('grocery')) {
       toolName = 'manage_lists';
       toolArgs = { action: 'query', filter: 'active' };
       toolResult = { total_lists: 8, shopping_count: 7, priority: 'Whole Foods' };
@@ -39,16 +70,6 @@ export async function simulateMockStream(
         question: 'Which trip would you like to plan right now?',
         options: ['Maui Packing (42)', 'London Trip (11)', 'Weekend Camping']
       };
-    } else if (lower.includes('learn')) {
-      toolName = 'knowledge_retrieval';
-      toolArgs = { subject: 'ambient_voice_ai', depth: 'concise' };
-      toolResult = { topic: 'Voice UI latency', cache_hit: true };
-      replyText = `Modern ambient assistants combine low-latency streaming responses with multimodal screen cards for rich context.`;
-    } else if (lower.includes('create')) {
-      toolName = 'creative_studio';
-      toolArgs = { prompt: text, style: 'assistant' };
-      toolResult = { status: 'generated', format: 'markdown' };
-      replyText = `Here's a quick creative concept tailored to your day: an ambient evening wind-down routine with soft lighting and ambient acoustics.`;
     }
 
     // Emit tool call

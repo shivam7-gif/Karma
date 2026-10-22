@@ -1,0 +1,146 @@
+{
+  "name": "karma-vscode-extension",
+  "displayName": "Karma Coding Assistant",
+  "description": "Real VS Code Integration for Karma AI Assistant & Coding Engine",
+  "version": "1.0.0",
+  "publisher": "karma",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "AI",
+    "Programming Languages",
+    "Linters"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "karma-container",
+          "title": "Karma AI",
+          "icon": "$(sparkle)"
+        }
+      ]
+    },
+    "views": {
+      "karma-container": [
+        {
+          "type": "webview",
+          "id": "karma.chatView",
+          "name": "Karma Assistant"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "karma.connect",
+        "title": "Karma: Connect to Agent Service",
+        "category": "Karma"
+      },
+      {
+        "command": "karma.disconnect",
+        "title": "Karma: Disconnect from Service",
+        "category": "Karma"
+      },
+      {
+        "command": "karma.sendWorkspace",
+        "title": "Karma: Sync Current Workspace",
+        "category": "Karma"
+      },
+      {
+        "command": "karma.explainSelection",
+        "title": "Karma: Explain Selection",
+        "category": "Karma"
+      },
+      {
+        "command": "karma.fixError",
+        "title": "Karma: Fix This Error",
+        "category": "Karma"
+      },
+      {
+        "command": "karma.refactorSelection",
+        "title": "Karma: Refactor Selection",
+        "category": "Karma"
+      },
+      {
+        "command": "karma.generateTests",
+        "title": "Karma: Generate Tests for Selection",
+        "category": "Karma"
+      },
+      {
+        "command": "karma.reviewChanges",
+        "title": "Karma: Review Recent Git Changes",
+        "category": "Karma"
+      },
+      {
+        "command": "karma.askAboutFile",
+        "title": "Karma: Ask About This File",
+        "category": "Karma"
+      },
+      {
+        "command": "karma.openInKarmaIde",
+        "title": "Karma: Open Current Project in Karma IDE",
+        "category": "Karma"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "karma.explainSelection",
+          "when": "editorHasSelection",
+          "group": "karma_group@1"
+        },
+        {
+          "command": "karma.fixError",
+          "when": "editorHasSelection",
+          "group": "karma_group@2"
+        },
+        {
+          "command": "karma.refactorSelection",
+          "when": "editorHasSelection",
+          "group": "karma_group@3"
+        },
+        {
+          "command": "karma.generateTests",
+          "when": "editorHasSelection",
+          "group": "karma_group@4"
+        },
+        {
+          "command": "karma.askAboutFile",
+          "group": "karma_group@5"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Karma Assistant",
+      "properties": {
+        "karma.serverUrl": {
+          "type": "string",
+          "default": "http://localhost:3000",
+          "description": "Backend URL of the running Karma Assistant Service"
+        },
+        "karma.authToken": {
+          "type": "string",
+          "default": "dev-user",
+          "description": "Authentication token for connecting to Karma"
+        },
+        "karma.autoSyncWorkspace": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically send workspace root to Karma on connection"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.3"
+  }
+}

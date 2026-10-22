@@ -1,33 +1,29 @@
 import React, { useRef, useEffect } from 'react';
 import { useAppStore } from '../store/appStore';
 import { MessageBubble } from './MessageBubble';
-import AuroraOrb from './chat-ai/AuroraOrb';
-import { useAudioLevel } from '../hooks/useAudioLevel';
+import { AgentTasksPanel } from './AgentTasksPanel';
 import { useChatStream } from '../hooks/useChatStream';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 
 interface ChatViewProps {
   onSelectElicitationOption: (messageId: string, option: string) => void;
 }
 
 export const ChatView: React.FC<ChatViewProps> = ({ onSelectElicitationOption }) => {
-  const { messages, deviceMode, isStreaming, openVoiceModal } = useAppStore();
+  const { messages, isStreaming, streamError, agentLifecycle } = useAppStore();
   const transcriptEndRef = useRef<HTMLDivElement>(null);
-  const { audioLevelRef, triggerWordPulse } = useAudioLevel();
   const { handleSendMessage } = useChatStream();
 
   useEffect(() => {
     transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isStreaming]);
-
-  useEffect(() => {
-    if (isStreaming) {
-      triggerWordPulse(0.9, 300);
-    }
-  }, [isStreaming, triggerWordPulse]);
+  }, [messages, isStreaming, streamError, agentLifecycle]);
 
   const lastAssistantMessage = [...messages].reverse().find((m) => m.sender === 'assistant');
   const lastUserMessage = [...messages].reverse().find((m) => m.sender === 'user');
-  const voiceState = isStreaming ? 'speaking' : 'idle';
+
+  // True if streaming has started but no tokens have arrived yet in the assistant message
+  const isWaitingForFirstToken =
+    isStreaming && lastAssistantMessage && (!lastAssistantMessage.text || lastAssistantMessage.text.trim().length === 0);
 
   const handleRegenerate = () => {
     if (lastUserMessage) {
@@ -52,104 +48,189 @@ export const ChatView: React.FC<ChatViewProps> = ({ onSelectElicitationOption })
         padding: '16px 20px 24px 20px',
       }}
     >
-      {/* Voice-only ambient mode: shows the animated 220px SoftAurora Orb reacting to speech */}
-      {deviceMode === 'voice-only' && (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '32px 16px',
-            marginBottom: '16px',
-            borderRadius: '24px',
-            background: 'rgba(255, 255, 255, 0.75)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(226, 232, 240, 0.8)',
-            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.05)',
-          }}
-        >
-          <div style={{ margin: '8px 0 16px 0' }}>
-            <AuroraOrb
-              size={220}
-              state={voiceState}
-              audioLevelRef={audioLevelRef}
-              onClick={openVoiceModal}
-            />
-          </div>
-          <div
-            style={{
-              fontSize: '13px',
-              color: isStreaming ? '#a855f7' : '#64748b',
-              fontWeight: 600,
-              letterSpacing: '0.04em',
-              textTransform: 'uppercase',
-            }}
-          >
-            {isStreaming ? 'Echo is speaking...' : 'Voice mode active (click orb to expand)'}
-          </div>
-          {lastAssistantMessage && (
-            <p
-              style={{
-                marginTop: '12px',
-                fontSize: '15px',
-                color: '#1e293b',
-                textAlign: 'center',
-                maxWidth: '560px',
-                lineHeight: 1.6,
-                fontWeight: 500,
-              }}
-            >
-              "{lastAssistantMessage.text || 'Listening...'}"
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Screen Mode Transcript */}
-      {deviceMode === 'screen' && (
-        <div style={{ flex: 1, width: '100%' }}>
-          {messages.map((message) => (
+      <div style={{ flex: 1, width: '100%' }}>
+        {messages.map((message) => {
+          // If this is the currently streaming empty assistant placeholder, don't render an empty bubble yet
+          if (message.id === lastAssistantMessage?.id && isWaitingForFirstToken) {
+            return null;
+          }
+          return (
             <MessageBubble
               key={message.id}
               message={message}
               onSelectElicitationOption={onSelectElicitationOption}
               onRegenerate={message.sender === 'assistant' ? handleRegenerate : undefined}
             />
-          ))}
+          );
+        })}
 
-          {/* Typing / Streaming Indicator */}
-          {isStreaming && (
-            <div
+        {/* Live Multi-Agent Monitoring View */}
+        <AgentTasksPanel />
+
+        {/* Live Agent Lifecycle Status Pill */}
+        {isStreaming && agentLifecycle && agentLifecycle.status !== 'completed' && (
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '6px 14px',
+              borderRadius: '9999px',
+              background:
+                agentLifecycle.status === 'controlling_screen'
+                  ? 'rgba(0, 145, 255, 0.08)'
+                  : agentLifecycle.status === 'waiting_for_user'
+                  ? 'rgba(245, 158, 11, 0.1)'
+                  : 'rgba(139, 61, 255, 0.06)',
+              border: `1px solid ${
+                agentLifecycle.status === 'controlling_screen'
+                  ? 'rgba(0, 145, 255, 0.3)'
+                  : agentLifecycle.status === 'waiting_for_user'
+                  ? 'rgba(245, 158, 11, 0.3)'
+                  : 'rgba(139, 61, 255, 0.2)'
+              }`,
+              color:
+                agentLifecycle.status === 'controlling_screen'
+                  ? '#0284c7'
+                  : agentLifecycle.status === 'waiting_for_user'
+                  ? '#d97706'
+                  : 'var(--accent, #8b3dff)',
+              fontSize: '12px',
+              fontWeight: 500,
+              marginBottom: '12px',
+              boxShadow: 'var(--shadow-soft, 0 1px 3px rgba(0,0,0,0.03))',
+              animation: 'fadeIn 0.2s ease',
+            }}
+          >
+            <span
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                margin: '8px 0 16px 44px',
-                fontSize: '13px',
-                color: '#64748b',
-                fontStyle: 'italic',
+                width: '7px',
+                height: '7px',
+                borderRadius: '50%',
+                background: 'currentColor',
+                animation: 'typingPulse 1.2s infinite ease-in-out',
               }}
-            >
-              <span className="streaming-dot" style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#2563eb' }} />
-              <span className="streaming-dot" style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#2563eb', animationDelay: '0.2s' }} />
-              <span className="streaming-dot" style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#2563eb', animationDelay: '0.4s' }} />
-              <span style={{ marginLeft: '4px' }}>Karma is streaming...</span>
-            </div>
-          )}
+            />
+            <span>{agentLifecycle.message}</span>
+          </div>
+        )}
 
-          <div ref={transcriptEndRef} />
-        </div>
-      )}
+        {/* Small typing indicator before the first token arrives */}
+        {isWaitingForFirstToken && (
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '10px 16px',
+              borderRadius: 'var(--r-md, 14px)',
+              background: '#ffffff',
+              border: '1px solid var(--border-glass, #e7e2d8)',
+              boxShadow: 'var(--shadow-soft, 0 1px 3px rgba(0, 0, 0, 0.03))',
+              marginBottom: '16px',
+              marginLeft: '0',
+            }}
+          >
+            <span
+              className="typing-dot"
+              style={{
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
+                background: 'var(--accent, #8b3dff)',
+              }}
+            />
+            <span
+              className="typing-dot"
+              style={{
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
+                background: 'var(--accent, #8b3dff)',
+                animationDelay: '0.15s',
+              }}
+            />
+            <span
+              className="typing-dot"
+              style={{
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
+                background: 'var(--accent, #8b3dff)',
+                animationDelay: '0.3s',
+              }}
+            />
+          </div>
+        )}
+
+        {/* Error State with Retry Button */}
+        {streamError && (
+          <div
+            role="alert"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '12px',
+              padding: '12px 16px',
+              borderRadius: 'var(--r-md, 14px)',
+              background: '#fff1f2',
+              border: '1px solid #fecdd3',
+              color: '#9f1239',
+              fontSize: '13px',
+              margin: '12px 0 16px 0',
+              boxShadow: 'var(--shadow-soft, 0 1px 3px rgba(0, 0, 0, 0.03))',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <AlertCircle size={16} strokeWidth={2} style={{ flexShrink: 0 }} />
+              <span>{streamError}</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleRegenerate}
+              aria-label="Retry message"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '5px 12px',
+                borderRadius: 'var(--r-sm, 10px)',
+                background: '#be123c',
+                border: 'none',
+                color: '#ffffff',
+                fontSize: '12px',
+                fontWeight: 500,
+                cursor: 'pointer',
+                flexShrink: 0,
+                transition: 'all var(--transition-fast, 150ms ease)',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.filter = 'brightness(1.1)')}
+              onMouseLeave={(e) => (e.currentTarget.style.filter = 'none')}
+            >
+              <RefreshCw size={12} />
+              <span>Retry</span>
+            </button>
+          </div>
+        )}
+
+        <div ref={transcriptEndRef} />
+      </div>
 
       <style>{`
-        @keyframes streamDotPulse {
-          0%, 100% { transform: translateY(0); opacity: 0.4; }
-          50% { transform: translateY(-4px); opacity: 1; }
+        @keyframes typingPulse {
+          0%, 100% {
+            transform: translateY(0);
+            opacity: 0.35;
+          }
+          50% {
+            transform: translateY(-4px);
+            opacity: 1;
+          }
         }
-        .streaming-dot {
+        .typing-dot {
           display: inline-block;
-          animation: streamDotPulse 1.2s infinite ease-in-out;
+          animation: typingPulse 1s infinite ease-in-out;
         }
       `}</style>
     </div>

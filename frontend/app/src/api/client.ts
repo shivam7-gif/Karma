@@ -1,6 +1,6 @@
 import { CONFIG } from '../config';
 import type { StreamEvent } from './types';
-import { simulateMockStream } from './mock';
+import { createSSEParser } from './sseParser';
 
 export async function sendMessage(
   text: string,
@@ -8,20 +8,26 @@ export async function sendMessage(
   onEvent: (event: StreamEvent) => void,
   signal?: AbortSignal
 ): Promise<void> {
-  if (CONFIG.useMock) {
-    return simulateMockStream(text, onEvent, signal);
-  }
-
   try {
+    let userId = 'default-user';
+    try {
+      const saved = localStorage.getItem('karma_user');
+      if (saved) {
+        const u = JSON.parse(saved);
+        if (u.email || u.id) userId = u.email || u.id;
+      }
+    } catch (e) {}
+
     const response = await fetch(CONFIG.apiEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'text/event-stream',
+        'x-user-id': userId,
       },
       body: JSON.stringify({
         message: text,
-        session_id: sessionId,
+        conversationId: sessionId,
       }),
       signal,
     });
@@ -36,40 +42,28 @@ export async function sendMessage(
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
-    let buffer = '';
+    const parser = createSSEParser({
+      onEvent,
+      onError: (err) => console.warn('SSE parse error:', err),
+    });
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() ?? '';
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed || trimmed.startsWith(':')) continue;
-
-        if (trimmed.startsWith('data:')) {
-          const jsonStr = trimmed.slice(5).trim();
-          if (jsonStr === '[DONE]') {
-            onEvent({ type: 'done' });
-            return;
-          }
-          try {
-            const parsed = JSON.parse(jsonStr) as StreamEvent;
-            onEvent(parsed);
-          } catch (e) {
-            console.warn('Failed to parse SSE JSON payload:', jsonStr, e);
-          }
-        }
-      }
+      const chunk = decoder.decode(value, { stream: true });
+      parser.feed(chunk);
+    }
+    // Flush any remaining characters in stream decoder
+    const finalChunk = decoder.decode();
+    if (finalChunk) {
+      parser.feed(finalChunk);
     }
   } catch (err: unknown) {
     if (err instanceof DOMException && err.name === 'AbortError') {
       return;
     }
-    console.warn('Backend fetch failed, falling back to mock stream:', err);
-    return simulateMockStream(text, onEvent, signal);
+    console.error('Chat backend streaming failed:', err);
+    throw err;
   }
 }

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
-import type { DeviceMode, Message, TraceItem } from '../api/types';
+import type { DeviceMode, Message, TraceItem, AgentLifecycleStatus } from '../api/types';
 
-export type NavItem = 'home' | 'history' | 'ideas' | 'calendar' | 'lists' | 'tasks' | 'insights';
+export type NavItem = 'home' | 'history' | 'ideas' | 'calendar' | 'lists' | 'tasks' | 'insights' | 'ide';
 
 export interface UserProfile {
   name: string;
@@ -22,7 +22,7 @@ const getInitialUser = (): UserProfile => {
 
 interface AppState {
   user: UserProfile | null;
-  view: 'home' | 'chat';
+  view: 'home' | 'chat' | 'ide';
   panelOpen: boolean;
   tracePanelOpen: boolean;
   deviceMode: DeviceMode;
@@ -30,16 +30,27 @@ interface AppState {
   inputValue: string;
   messages: Message[];
   traceItems: TraceItem[];
+  orchestratorTasks: import('../api/types').ClientOrchestratorTask[];
   isStreaming: boolean;
+  streamError: string | null;
   sessionId: string;
+  agentLifecycle: { status: AgentLifecycleStatus; message: string; tool?: string; timestamp?: string } | null;
 
   isVoiceModalOpen: boolean;
+  isSettingsOpen: boolean;
 
   // Actions
+  setAgentLifecycle: (lifecycle: { status: AgentLifecycleStatus; message: string; tool?: string; timestamp?: string } | null) => void;
+  upsertOrchestratorTask: (task: Partial<import('../api/types').ClientOrchestratorTask> & { taskId: string }) => void;
+  clearOrchestratorTasks: () => void;
+  cancelOrchestratorTask: (taskId: string) => Promise<void>;
+  cancelAllOrchestratorTasks: () => Promise<void>;
   openVoiceModal: () => void;
   closeVoiceModal: () => void;
+  openSettings: () => void;
+  closeSettings: () => void;
   setUser: (user: UserProfile | null) => void;
-  setView: (view: 'home' | 'chat') => void;
+  setView: (view: 'home' | 'chat' | 'ide') => void;
   setPanelOpen: (open: boolean) => void;
   togglePanel: () => void;
   setTracePanelOpen: (open: boolean) => void;
@@ -48,6 +59,7 @@ interface AppState {
   setActiveNav: (nav: NavItem) => void;
   setInputValue: (val: string) => void;
   setIsStreaming: (isStreaming: boolean) => void;
+  setStreamError: (err: string | null) => void;
   
   addMessage: (message: Message) => void;
   appendAssistantToken: (messageId: string, token: string) => void;
@@ -60,6 +72,7 @@ interface AppState {
   resetToHome: () => void;
 }
 
+
 export const useAppStore = create<AppState>((set) => ({
   user: getInitialUser(),
   view: 'home',
@@ -70,12 +83,66 @@ export const useAppStore = create<AppState>((set) => ({
   inputValue: '',
   messages: [],
   traceItems: [],
+  orchestratorTasks: [],
   isStreaming: false,
+  streamError: null,
   sessionId: `session_${Date.now()}`,
+  agentLifecycle: null,
   isVoiceModalOpen: false,
+  isSettingsOpen: false,
+
+  setAgentLifecycle: (agentLifecycle) => set({ agentLifecycle }),
+  upsertOrchestratorTask: (taskPatch) =>
+    set((state) => {
+      const idx = state.orchestratorTasks.findIndex((t) => t.taskId === taskPatch.taskId);
+      if (idx >= 0) {
+        const copy = [...state.orchestratorTasks];
+        copy[idx] = { ...copy[idx], ...taskPatch } as import('../api/types').ClientOrchestratorTask;
+        return { orchestratorTasks: copy };
+      }
+      return {
+        orchestratorTasks: [...state.orchestratorTasks, taskPatch as import('../api/types').ClientOrchestratorTask],
+      };
+    }),
+  clearOrchestratorTasks: () => set({ orchestratorTasks: [] }),
+  cancelOrchestratorTask: async (taskId: string) => {
+    try {
+      await fetch('/api/chat/tasks/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskId }),
+      });
+      set((state) => ({
+        orchestratorTasks: state.orchestratorTasks.map((t) =>
+          t.taskId === taskId ? { ...t, status: 'cancelled' } : t
+        ),
+      }));
+    } catch (err) {
+      console.warn('Failed to cancel task:', err);
+    }
+  },
+  cancelAllOrchestratorTasks: async () => {
+    try {
+      const state = useAppStore.getState();
+      await fetch('/api/chat/tasks/cancel-all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: state.sessionId }),
+      });
+      set((state) => ({
+        orchestratorTasks: state.orchestratorTasks.map((t) =>
+          t.status === 'running' || t.status === 'queued' ? { ...t, status: 'cancelled' } : t
+        ),
+      }));
+    } catch (err) {
+      console.warn('Failed to cancel all tasks:', err);
+    }
+  },
 
   openVoiceModal: () => set({ isVoiceModalOpen: true }),
   closeVoiceModal: () => set({ isVoiceModalOpen: false }),
+  openSettings: () => set({ isSettingsOpen: true }),
+  closeSettings: () => set({ isSettingsOpen: false }),
   setUser: (user) => {
     if (user) {
       localStorage.setItem('karma_user', JSON.stringify(user));
@@ -93,6 +160,7 @@ export const useAppStore = create<AppState>((set) => ({
   setActiveNav: (activeNav) => set({ activeNav }),
   setInputValue: (inputValue) => set({ inputValue }),
   setIsStreaming: (isStreaming) => set({ isStreaming }),
+  setStreamError: (streamError) => set({ streamError }),
 
   addMessage: (message) => set((state) => ({
     messages: [...state.messages, message]

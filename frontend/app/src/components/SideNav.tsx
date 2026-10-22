@@ -7,8 +7,10 @@ import {
   ListTodo,
   CheckSquare,
   BarChart3,
+  Code,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../store/appStore';
 import type { NavItem } from '../store/appStore';
 
@@ -20,6 +22,7 @@ interface NavButtonConfig {
 
 const NAV_ITEMS: NavButtonConfig[] = [
   { id: 'home', label: 'Home', icon: Home },
+  { id: 'ide', label: 'IDE Workspace', icon: Code },
   { id: 'history', label: 'History', icon: History },
   { id: 'ideas', label: 'Ideas', icon: Lightbulb },
   { id: 'calendar', label: 'Calendar', icon: Calendar },
@@ -29,7 +32,8 @@ const NAV_ITEMS: NavButtonConfig[] = [
 ];
 
 export const SideNav: React.FC = () => {
-  const { activeNav, setActiveNav, togglePanel, panelOpen, setView } = useAppStore();
+  const navigate = useNavigate();
+  const { activeNav, setActiveNav, togglePanel, panelOpen, setView, view } = useAppStore();
 
   const handleNavClick = (id: NavItem) => {
     setActiveNav(id);
@@ -37,12 +41,16 @@ export const SideNav: React.FC = () => {
       togglePanel();
     } else if (id === 'home') {
       setView('home');
+      navigate('/dashboard');
+    } else if (id === 'ide') {
+      setView('ide');
+      navigate('/ide');
     }
   };
 
   return (
     <nav
-      aria-label="Main Navigation"
+      aria-label="Sidebar Navigation"
       className="floating-side-nav"
       style={{
         position: 'absolute',
@@ -54,19 +62,23 @@ export const SideNav: React.FC = () => {
         flexDirection: 'column',
         alignItems: 'center',
         padding: '8px 6px',
-        background: 'rgba(255, 255, 255, 0.92)',
+        background: 'rgba(255, 255, 255, 0.94)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        border: '1px solid #E2E8F0',
-        borderRadius: '9999px',
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06)',
-        gap: '8px',
+        border: '1px solid var(--border-glass, #e7e2d8)',
+        borderRadius: 'var(--r-full, 9999px)',
+        boxShadow: 'var(--shadow-soft, 0 4px 20px rgba(0, 0, 0, 0.04))',
+        gap: '6px',
         width: '46px',
       }}
     >
       {NAV_ITEMS.map((item) => {
         const IconComponent = item.icon;
-        const isActive = activeNav === item.id || (item.id === 'lists' && panelOpen);
+        const isActive =
+          (item.id === 'ide' && view === 'ide') ||
+          (item.id === 'home' && view === 'home') ||
+          activeNav === item.id ||
+          (item.id === 'lists' && panelOpen);
 
         return (
           <div key={item.id} className="nav-item-wrapper" style={{ position: 'relative' }}>
@@ -82,31 +94,31 @@ export const SideNav: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderRadius: isActive ? '10px' : '50%',
-                background: isActive ? '#2563EB' : 'transparent',
-                color: isActive ? '#FFFFFF' : '#64748B',
+                borderRadius: 'var(--r-sm, 10px)',
+                background: isActive ? 'var(--accent, #8b3dff)' : 'transparent',
+                color: isActive ? '#ffffff' : 'var(--text-secondary, #575260)',
                 border: 'none',
                 cursor: 'pointer',
-                transition: 'all 0.15s ease',
-                boxShadow: isActive ? '0 2px 6px rgba(37, 99, 235, 0.25)' : 'none',
+                transition: 'all var(--transition-hover, 120ms ease)',
+                boxShadow: isActive ? '0 2px 8px rgba(139, 61, 255, 0.3)' : 'none',
               }}
               onMouseEnter={(e) => {
                 if (!isActive) {
-                  e.currentTarget.style.color = '#0F172A';
-                  e.currentTarget.style.background = '#F1F5F9';
+                  e.currentTarget.style.color = 'var(--text-primary, #19161d)';
+                  e.currentTarget.style.background = 'var(--surface-glass-hover, #f5f2ec)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isActive) {
-                  e.currentTarget.style.color = '#64748B';
+                  e.currentTarget.style.color = 'var(--text-secondary, #575260)';
                   e.currentTarget.style.background = 'transparent';
                 }
               }}
             >
-              <IconComponent size={18} strokeWidth={2} />
+              <IconComponent size={17} strokeWidth={1.8} />
             </button>
 
-            {/* Accessible hover tooltip */}
+            {/* Accessible hover/focus tooltip */}
             <span
               className="nav-tooltip"
               role="tooltip"
@@ -115,20 +127,19 @@ export const SideNav: React.FC = () => {
                 left: '100%',
                 top: '50%',
                 transform: 'translateY(-50%)',
-                marginLeft: '12px',
-                padding: '4px 10px',
-                background: '#1E293B',
-                border: '1px solid #334155',
+                marginLeft: '10px',
+                padding: '4px 9px',
+                background: '#19161d',
                 borderRadius: '6px',
-                color: '#FFFFFF',
-                fontSize: '12px',
+                color: '#ffffff',
+                fontSize: '11.5px',
                 fontWeight: 500,
                 whiteSpace: 'nowrap',
                 pointerEvents: 'none',
                 opacity: 0,
-                transition: 'opacity 0.15s ease, transform 0.15s ease',
+                transition: 'opacity 120ms ease, transform 120ms ease',
                 zIndex: 50,
-                boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+                boxShadow: '0 4px 14px rgba(0,0,0,0.12)',
               }}
             >
               {item.label}
@@ -137,11 +148,11 @@ export const SideNav: React.FC = () => {
         );
       })}
 
-
       <style>{`
-        .nav-item-wrapper:hover .nav-tooltip {
+        .nav-item-wrapper:hover .nav-tooltip,
+        .nav-item-wrapper:focus-within .nav-tooltip {
           opacity: 1 !important;
-          transform: translateY(-50%) translateX(4px) !important;
+          transform: translateY(-50%) translateX(2px) !important;
         }
         @media (max-width: 768px) {
           .floating-side-nav {
@@ -152,9 +163,10 @@ export const SideNav: React.FC = () => {
             transform: translateX(-50%) !important;
             flex-direction: row !important;
             width: auto !important;
-            padding: 6px 12px !important;
-            border-radius: var(--radius-full) !important;
-            background: rgba(10, 15, 24, 0.92) !important;
+            padding: 6px 10px !important;
+            border-radius: var(--r-full, 9999px) !important;
+            background: rgba(25, 22, 29, 0.95) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
           }
           .nav-item-wrapper:hover .nav-tooltip {
             display: none !important;
@@ -164,3 +176,5 @@ export const SideNav: React.FC = () => {
     </nav>
   );
 };
+
+export default SideNav;

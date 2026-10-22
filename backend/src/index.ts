@@ -1,6 +1,16 @@
 import express from "express";
+import type { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import "dotenv/config";
+import { settingsRouter } from "./routes/settings.js";
+import { chatRouter } from "./routes/chat.js";
+import { workspaceRouter } from "./routes/workspace.routes.js";
+import { terminalRouter } from "./routes/terminal.routes.js";
+import { vscodeRouter } from "./routes/vscode.routes.js";
+import mcpApp from "./mcp/server.js";
+import { checkDbHealth } from "./db/index.js";
+import { AppError } from "./lib/errors.js";
+import { logger } from "./lib/logger.js";
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -29,202 +39,27 @@ app.use(
 );
 app.use(express.json());
 
-/* -------------------------------------------------------------------------- */
-/* Chat Streaming Endpoint (SSE proxy for LLM APIs)                           */
-/* -------------------------------------------------------------------------- */
-
-app.post("/api/chat", async (req, res) => {
-  const { message, messages: incomingHistory } = req.body;
-
-  // Build full message history
-  const history: Array<{ role: string; content: string }> = incomingHistory && Array.isArray(incomingHistory)
-    ? incomingHistory.map((m: any) => ({
-        role: m.sender === 'user' || m.role === 'user' ? 'user' : 'assistant',
-        content: m.text || m.content || '',
-      }))
-    : message
-    ? [{ role: 'user', content: String(message) }]
-    : [];
-
-  if (history.length === 0) {
-    return res.status(400).json({ error: "Missing message or messages array" });
-  }
-
-  // Set SSE headers
-  res.writeHead(200, {
-    "Content-Type": "text/event-stream",
-    "Cache-Control": "no-cache, no-transform",
-    "Connection": "keep-alive",
-    "X-Accel-Buffering": "no",
-  });
-
-  let isAborted = false;
-  req.on("close", () => {
-    isAborted = true;
-  });
-
-  const sendToken = (token: string) => {
-    if (isAborted) return;
-    res.write(`data: ${JSON.stringify({ type: "token", text: token })}\n\n`);
-  };
-
-  const sendDone = () => {
-    if (isAborted) return;
-    res.write("data: [DONE]\n\n");
-    res.end();
-  };
-
-  const apiKey = process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY;
-  const isGroq = !process.env.OPENAI_API_KEY && Boolean(process.env.GROQ_API_KEY);
-  const endpoint = isGroq
-    ? "https://api.groq.com/openai/v1/chat/completions"
-    : "https://api.openai.com/v1/chat/completions";
-  const model = isGroq
-    ? process.env.GROQ_MODEL || "llama-3.3-70b-versatile"
-    : process.env.OPENAI_MODEL || "gpt-4o-mini";
-
-  if (apiKey) {
-    try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model,
-          messages: [
-            {
-              role: "system",
-              content:
-                "You are Chat A.I, a helpful, brilliant, friendly conversational assistant. Format code in markdown fences, use clean bullet lists, and keep explanations elegant and easy to scan.",
-            },
-            ...history,
-          ],
-          stream: true,
-          temperature: 0.7,
-        }),
-      });
-
-      if (!response.ok || !response.body) {
-        throw new Error(`Upstream API failed: ${response.status} ${response.statusText}`);
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (!isAborted) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? "";
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed || trimmed.startsWith(":")) continue;
-          if (trimmed.startsWith("data: ")) {
-            const dataStr = trimmed.slice(6).trim();
-            if (dataStr === "[DONE]") {
-              sendDone();
-              return;
-            }
-            try {
-              const parsed = JSON.parse(dataStr);
-              const delta = parsed.choices?.[0]?.delta?.content;
-              if (delta) {
-                sendToken(delta);
-              }
-            } catch (e) {
-              // ignore parse errors for partial chunks
-            }
-          }
-        }
-      }
-
-      sendDone();
-      return;
-    } catch (err) {
-      console.warn("LLM API proxy streaming failed, falling back to built-in generator:", err);
-    }
-  }
-
-  // Built-in intelligent streaming response generator (zero-setup fallback)
-  const lastUserMsg = history[history.length - 1]?.content.toLowerCase() || "";
-  let fullReply = "";
-
-  if (lastUserMsg.includes("hello") || lastUserMsg.includes("hi") || lastUserMsg.includes("hey")) {
-    fullReply =
-      "Hello! I'm **Chat A.I**, your conversational and voice companion.\n\n" +
-      "Here are a few things we can do together:\n" +
-      "1. **Explore Voice Mode**: Click the **Voice** button or mic below to open the interactive Aurora Orb with real-time audio visualization.\n" +
-      "2. **Ask Questions**: Learn about algorithms, system design, or creative writing.\n" +
-      "3. **Write & Debug Code**: Generate fast snippets in TypeScript, Python, or Rust with syntax highlighting.\n\n" +
-      "How can I assist your workflow today?";
-  } else if (lastUserMsg.includes("voice") || lastUserMsg.includes("aurora") || lastUserMsg.includes("mic")) {
-    fullReply =
-      "The **Voice Mode** features an interactive WebGL **SoftAurora Orb** that reacts dynamically to sound frequencies:\n\n" +
-      "- **Listening State**: Turns luminous sky-blue and breathes with your microphone input.\n" +
-      "- **Speaking State**: Blooms into violet-magenta ripples synced to speech synthesis envelopes.\n" +
-      "- **Frequency Bands**: Modulates noise amplitude, octave decay, and brightness across sub-bass and speech formant bands.\n\n" +
-      "Try clicking the **Voice** button in the floating input pill to see it in action!";
-  } else if (lastUserMsg.includes("code") || lastUserMsg.includes("react") || lastUserMsg.includes("function")) {
-    fullReply =
-      "Here is a clean React hook example for capturing real-time microphone RMS audio levels:\n\n" +
-      "```typescript\n" +
-      "import { useEffect, useState, useRef } from 'react';\n\n" +
-      "export function useMicLevel() {\n" +
-      "  const [level, setLevel] = useState(0);\n" +
-      "  const audioCtxRef = useRef<AudioContext | null>(null);\n\n" +
-      "  useEffect(() => {\n" +
-      "    let animationFrame: number;\n" +
-      "    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {\n" +
-      "      const ctx = new AudioContext();\n" +
-      "      const analyser = ctx.createAnalyser();\n" +
-      "      const source = ctx.createMediaStreamSource(stream);\n" +
-      "      source.connect(analyser);\n" +
-      "      const data = new Uint8Array(analyser.frequencyBinCount);\n\n" +
-      "      const update = () => {\n" +
-      "        analyser.getByteFrequencyData(data);\n" +
-      "        const rms = Math.sqrt(data.reduce((a, b) => a + b * b, 0) / data.length);\n" +
-      "        setLevel(rms / 128);\n" +
-      "        animationFrame = requestAnimationFrame(update);\n" +
-      "      };\n" +
-      "      update();\n" +
-      "    });\n" +
-      "    return () => cancelAnimationFrame(animationFrame);\n" +
-      "  }, []);\n\n" +
-      "  return level;\n" +
-      "}\n" +
-      "```\n\n" +
-      "You can easily feed this `level` straight into shader uniforms or animation curves!";
-  } else {
-    fullReply =
-      `I've analyzed your inquiry regarding **"${history[history.length - 1]?.content}"**.\n\n` +
-      "### Key Observations\n" +
-      "1. **Adaptive Architecture**: Real-time streaming guarantees instant feedback without blocking the UI.\n" +
-      "2. **Multimodal Synchronization**: Text streams in synchrony with speech synthesis and WebGL shader parameters.\n" +
-      "3. **Resilient Fallback**: If an upstream connection drops, local recovery seamlessly continues the dialogue.\n\n" +
-      "Let me know if you would like me to delve deeper into any specific aspect!";
-  }
-
-  // Tokenize by words and punctuation to stream realistic tokens
-  const words = fullReply.split(/(\s+)/);
-  for (const piece of words) {
-    if (isAborted) break;
-    sendToken(piece);
-    await new Promise((resolve) => setTimeout(resolve, 22));
-  }
-  sendDone();
-});
+// Routes
+app.use("/api/settings", settingsRouter);
+app.use("/api/chat", chatRouter);
+app.use("/api/workspace", workspaceRouter);
+app.use("/api/terminal", terminalRouter);
+app.use("/api/vscode", vscodeRouter);
+app.use(mcpApp);
 
 
-app.get("/health", (_req, res) => {
-  res.json({
-    status: "ok",
+app.get("/health", async (_req, res) => {
+  const dbHealth = await checkDbHealth();
+  const isHealthy = dbHealth.ok;
+
+  res.status(isHealthy ? 200 : 503).json({
+    status: isHealthy ? "ok" : "degraded",
     service: "karma-backend",
+    database: {
+      status: dbHealth.ok ? "connected" : "disconnected",
+      latencyMs: dbHealth.latencyMs,
+      error: dbHealth.error,
+    },
     timestamp: new Date().toISOString(),
   });
 });
@@ -379,6 +214,47 @@ app.post("/api/auth/signup", (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Backend running at http://localhost:${PORT}`);
+// Global Error Handler Middleware
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  if (err instanceof AppError) {
+    logger.warn({ code: err.code, status: err.statusCode, message: err.message }, 'Operational error handled');
+    res.status(err.statusCode).json({
+      error: {
+        message: err.message,
+        code: err.code,
+        details: err.details,
+      },
+    });
+    return;
+  }
+
+  const message = err instanceof Error ? err.message : 'Internal Server Error';
+  logger.error({ err }, 'Unhandled server exception');
+  res.status(500).json({
+    error: {
+      message: 'An unexpected internal error occurred.',
+      code: 'INTERNAL_SERVER_ERROR',
+      ...(process.env.NODE_ENV !== 'production' ? { details: message } : {}),
+    },
+  });
 });
+
+const server = app.listen(PORT, () => {
+  logger.info(`Karma backend running at http://localhost:${PORT}`);
+});
+
+// Graceful Shutdown
+const shutdown = () => {
+  logger.info('Shutting down Karma backend gracefully...');
+  server.close(() => {
+    logger.info('HTTP server closed.');
+    process.exit(0);
+  });
+  setTimeout(() => {
+    logger.error('Forcefully terminating process after timeout');
+    process.exit(1);
+  }, 10000);
+};
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
