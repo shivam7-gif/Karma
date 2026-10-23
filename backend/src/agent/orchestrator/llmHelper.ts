@@ -23,15 +23,13 @@ export async function callAgentLLM(
   const useGroq = Boolean(process.env.GROQ_API_KEY) || process.env.LLM_PROVIDER === 'groq';
   const provider: LLMProvider = useGroq ? groqProvider : openRouterProvider;
   const apiKey = useGroq ? process.env.GROQ_API_KEY?.trim() : process.env.OPENROUTER_API_KEY?.trim();
-  const rawModel = options?.model || (useGroq ? (process.env.GROQ_MODEL || 'llama-3.3-70b-versatile') : 'meta-llama/llama-3.3-70b-instruct:free');
+  const rawModel = options?.model || (useGroq ? (process.env.GROQ_MODEL || 'openai/gpt-oss-20b') : 'meta-llama/llama-3.3-70b-instruct:free');
   const model = rawModel;
 
   const fallbackModels = useGroq
     ? [
-        'llama-3.3-70b-versatile',
-        'llama-3.1-8b-instant',
-        'openai/gpt-oss-120b',
         'openai/gpt-oss-20b',
+        'openai/gpt-oss-120b',
         'qwen/qwen3.8-27b',
       ]
     : ['meta-llama/llama-3.3-70b-instruct:free'];
@@ -43,9 +41,9 @@ export async function callAgentLLM(
   ];
 
   for (let mIdx = 0; mIdx < modelQueue.length; mIdx++) {
-    const currentModel = modelQueue[mIdx];
+    const currentModel = modelQueue[mIdx] || 'openai/gpt-oss-120b';
     let text = '';
-    let finalModel = currentModel;
+    let finalModel: string = currentModel;
     let promptTokens = 0;
     let completionTokens = 0;
 

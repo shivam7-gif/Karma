@@ -379,7 +379,7 @@ app.get('/health', (_req: Request, res: Response) => {
   });
 });
 
-app.get('/', (_req: Request, res: Response) => {
+app.get('/mcp/status', (_req: Request, res: Response) => {
   res.json({
     service: mcpConfig.name,
     description: 'Karma Model Context Protocol (MCP) Server',

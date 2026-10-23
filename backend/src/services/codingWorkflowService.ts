@@ -24,10 +24,10 @@ export interface CodingWorkflowResult {
   plan: string;
   proposals: PatchProposal[];
   investigatorReport: string;
-  reviewerNotes?: string;
-  testPassed?: boolean;
-  testOutput?: string;
-  error?: string;
+  reviewerNotes?: string | undefined;
+  testPassed?: boolean | undefined;
+  testOutput?: string | undefined;
+  error?: string | undefined;
 }
 
 export class CodingWorkflowService {
@@ -137,8 +137,8 @@ Only generate modifications that directly address the task.`;
     let match: RegExpExecArray | null;
 
     while ((match = fileRegex.exec(implementerResp.text)) !== null) {
-      const relPath = match[1].trim();
-      const proposedContent = match[2].trimStart();
+      const relPath = match[1]?.trim() || '';
+      const proposedContent = match[2]?.trimStart() || '';
 
       let originalContent = '';
       let originalHash = '';

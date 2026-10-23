@@ -7,8 +7,11 @@ import { chatRouter } from "./routes/chat.js";
 import { workspaceRouter } from "./routes/workspace.routes.js";
 import { terminalRouter } from "./routes/terminal.routes.js";
 import { vscodeRouter } from "./routes/vscode.routes.js";
+import { approvalRouter } from "./routes/approval.routes.js";
 import mcpApp from "./mcp/server.js";
 import { checkDbHealth } from "./db/index.js";
+import path from "node:path";
+import fs from "node:fs";
 import { AppError } from "./lib/errors.js";
 import { logger } from "./lib/logger.js";
 
@@ -42,6 +45,7 @@ app.use(express.json());
 // Routes
 app.use("/api/settings", settingsRouter);
 app.use("/api/chat", chatRouter);
+app.use("/api/approval", approvalRouter);
 app.use("/api/workspace", workspaceRouter);
 app.use("/api/terminal", terminalRouter);
 app.use("/api/vscode", vscodeRouter);
@@ -213,6 +217,20 @@ app.post("/api/auth/signup", (req, res) => {
     },
   });
 });
+// Static frontend SPA serving (when built)
+const frontendDist = path.resolve(process.cwd(), '../frontend/app/dist');
+const altFrontendDist = path.resolve(process.cwd(), 'frontend/app/dist');
+const distPath = fs.existsSync(frontendDist) ? frontendDist : fs.existsSync(altFrontendDist) ? altFrontendDist : null;
+
+if (distPath) {
+  app.use(express.static(distPath));
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.method !== 'GET' || req.path.startsWith('/api') || req.path.startsWith('/health') || req.path.startsWith('/mcp')) {
+      return next();
+    }
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
 
 // Global Error Handler Middleware
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {

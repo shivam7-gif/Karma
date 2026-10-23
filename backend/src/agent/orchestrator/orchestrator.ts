@@ -5,6 +5,7 @@ import {
   type OrchestratorStreamEvent,
   type AgentType,
   type TaskStatus,
+  type AgentResult,
 } from './types.js';
 import { taskStore } from './taskStore.js';
 import { generatePlan } from './planner.js';
@@ -30,9 +31,9 @@ export class MultiAgentOrchestrator {
 
   constructor(
     private defaultConfig: OrchestratorConfig = {
-      maxConcurrency: 3,
+      maxConcurrency: 3, // Initial 3 concurrent workers as specified
       taskTimeoutMs: 60000,
-      maxRetries: 1,
+      maxRetries: 1, // 1 bounded retry on transient failure
     }
   ) {}
 
@@ -52,6 +53,7 @@ export class MultiAgentOrchestrator {
       5 // Hard upper bound
     );
     const timeoutMs = options.config?.taskTimeoutMs ?? this.defaultConfig.taskTimeoutMs;
+    const maxRetries = options.config?.maxRetries ?? this.defaultConfig.maxRetries;
 
     // 1. Session abort controller
     const sessionAbort = new AbortController();
@@ -120,14 +122,20 @@ export class MultiAgentOrchestrator {
       for (const [taskId, task] of tasksMap.entries()) {
         if (task.status !== 'queued') continue;
 
-        // Check if dependencies are met
-        const depsMet = task.dependencies.every((depId) => completedTasks.has(depId));
-        const anyDepFailed = task.dependencies.some((depId) => failedTasks.has(depId));
+        // Check if all prerequisites have settled (either completed or failed)
+        const allDepsSettled = task.dependencies.every(
+          (depId) => completedTasks.has(depId) || failedTasks.has(depId)
+        );
 
-        if (anyDepFailed) {
-          // If a prerequisite task failed, fail this dependent task cleanly
+        if (!allDepsSettled) {
+          // Still waiting for some prerequisite tasks
+          continue;
+        }
+
+        // If task has dependencies and ALL of them failed, only then fail this dependent task
+        if (task.dependencies.length > 0 && task.dependencies.every((depId) => failedTasks.has(depId))) {
           task.status = 'failed';
-          task.error = 'Prerequisite dependency failed';
+          task.error = 'All prerequisite dependency tasks failed';
           task.completedAt = new Date().toISOString();
           failedTasks.add(taskId);
           taskStore.updateTask(taskId, { status: 'failed', error: task.error, completedAt: task.completedAt });
@@ -143,7 +151,8 @@ export class MultiAgentOrchestrator {
           continue;
         }
 
-        if (depsMet && runningCount < concurrencyLimit) {
+        // If prerequisites have settled (with partial or full results) and concurrency slot available
+        if (runningCount < concurrencyLimit) {
           runningCount++;
           task.status = 'running';
           const p = runTask(task).finally(() => {
@@ -154,7 +163,6 @@ export class MultiAgentOrchestrator {
         }
       }
     };
-
 
     const runTask = async (task: OrchestratorTask) => {
       const taskAbort = new AbortController();
@@ -176,45 +184,81 @@ export class MultiAgentOrchestrator {
         agentType: task.agentType,
         status: 'running',
         startedAt: task.startedAt,
-        activity: `Agent [${task.agentType}] started execution`,
+        activity: `Agent [${task.agentType}] executing research and gathering evidence...`,
         timestamp: new Date().toISOString(),
       });
 
-      // Gather completed dependency results
+      // Gather completed and partial dependency results
       const depResults = new Map<string, string>();
       for (const depId of task.dependencies) {
         const depTask = tasksMap.get(depId);
         if (depTask?.result) {
           depResults.set(depId, depTask.result);
+        } else if (depTask?.error) {
+          depResults.set(depId, `[NOTICE: Upstream specialist task ${depId} failed with error: ${depTask.error}]`);
         }
       }
 
-      // Timeout wrapper
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error(`Task timed out after ${timeoutMs}ms`)), timeoutMs)
-      );
+      let attempt = 0;
+      let finalResult: AgentResult | null = null;
 
       try {
-        const agentPromise = this.dispatchToAgent(task, sessionId, depResults, taskAbort.signal, (act) => {
-          onEvent?.({
-            type: 'task_updated',
-            taskId: task.taskId,
-            sessionId,
-            agentType: task.agentType,
-            status: 'running',
-            activity: act,
-            timestamp: new Date().toISOString(),
-          });
-        });
+        while (attempt <= maxRetries && !taskAbort.signal.aborted && !sessionAbort.signal.aborted) {
+          try {
+            if (attempt > 0) {
+              onEvent?.({
+                type: 'task_updated',
+                taskId: task.taskId,
+                sessionId,
+                agentType: task.agentType,
+                status: 'running',
+                activity: `Retrying task execution (attempt ${attempt + 1}/${maxRetries + 1})...`,
+                timestamp: new Date().toISOString(),
+              });
+            }
 
-        const result = await Promise.race([agentPromise, timeoutPromise]);
+            // Timeout wrapper per attempt
+            const timeoutPromise = new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error(`Task timed out after ${timeoutMs}ms`)), timeoutMs)
+            );
 
-        task.status = result.success ? 'completed' : 'failed';
-        task.result = result.output;
-        task.error = result.error;
+            const agentPromise = this.dispatchToAgent(task, sessionId, depResults, taskAbort.signal, (act) => {
+              onEvent?.({
+                type: 'task_updated',
+                taskId: task.taskId,
+                sessionId,
+                agentType: task.agentType,
+                status: 'running',
+                activity: act,
+                timestamp: new Date().toISOString(),
+              });
+            });
+
+            finalResult = await Promise.race([agentPromise, timeoutPromise]);
+            if (finalResult && finalResult.success) {
+              break;
+            }
+          } catch (err: unknown) {
+            if (taskAbort.signal.aborted || sessionAbort.signal.aborted) {
+              throw err;
+            }
+            if (attempt < maxRetries) {
+              attempt++;
+              await new Promise((r) => setTimeout(r, 1000));
+              continue;
+            }
+            throw err;
+          }
+          attempt++;
+        }
+
+        const isSuccess = Boolean(finalResult?.success);
+        task.status = isSuccess ? 'completed' : 'failed';
+        task.result = finalResult?.output;
+        task.error = finalResult?.error;
         task.completedAt = new Date().toISOString();
 
-        if (result.success) {
+        if (isSuccess) {
           completedTasks.add(task.taskId);
         } else {
           failedTasks.add(task.taskId);
@@ -227,7 +271,7 @@ export class MultiAgentOrchestrator {
           completedAt: task.completedAt,
         });
 
-        if (result.success) {
+        if (isSuccess) {
           onEvent?.({
             type: 'task_completed',
             taskId: task.taskId,
@@ -275,7 +319,7 @@ export class MultiAgentOrchestrator {
       }
     };
 
-    // Kick off scheduler
+    // Kick off scheduler with concurrent tasks
     scheduleNextTasks();
 
     // Wait until all tasks have settled
@@ -394,6 +438,5 @@ export class MultiAgentOrchestrator {
     }
   }
 }
-
 
 export const orchestrator = new MultiAgentOrchestrator();

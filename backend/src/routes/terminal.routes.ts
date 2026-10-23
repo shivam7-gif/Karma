@@ -65,7 +65,7 @@ terminalRouter.post('/stop', (req: Request, res: Response) => {
 
 // 5. SSE Output Stream
 terminalRouter.get('/stream/:processId', (req: Request, res: Response) => {
-  const { processId } = req.params;
+  const processId = String(req.params.processId || '');
   const proc = terminalService.getProcess(processId);
 
   if (!proc) {

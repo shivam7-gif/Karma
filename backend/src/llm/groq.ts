@@ -94,9 +94,9 @@ export class GroqProvider implements LLMProvider {
       return;
     }
 
-    let model = options?.model || process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
-    if (model.startsWith('meta-llama/')) {
-      model = model.includes('70b') ? 'llama-3.3-70b-versatile' : 'llama-3.1-8b-instant';
+    let model = options?.model || process.env.GROQ_MODEL || 'openai/gpt-oss-20b';
+    if (model.includes('llama')) {
+      model = process.env.GROQ_MODEL || 'openai/gpt-oss-20b';
     }
 
     const requestBody: Record<string, unknown> = {

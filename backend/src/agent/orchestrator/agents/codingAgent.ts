@@ -43,13 +43,17 @@ export async function runCodingAgent(ctx: AgentContext): Promise<AgentResult> {
   onActivity('Invoking Coding Engine (Investigator -> Implementer -> Reviewer)...');
 
   try {
+    const workflowOptions: { targetFiles?: string[]; onProgress?: (msg: string) => void } = {
+      onProgress: (msg: string) => onActivity(msg),
+    };
+    if (safeFiles.length > 0) {
+      workflowOptions.targetFiles = safeFiles;
+    }
+
     const workflow = await codingWorkflowService.runCodingWorkflow(
-      task.id,
+      task.taskId,
       `${task.description}\n${dependencyContext}`,
-      {
-        targetFiles: safeFiles.length > 0 ? safeFiles : undefined,
-        onProgress: (msg) => onActivity(msg),
-      }
+      workflowOptions
     );
 
     let outputSummary = `### Coding Engine Execution Summary\n\n`;
@@ -78,7 +82,7 @@ export async function runCodingAgent(ctx: AgentContext): Promise<AgentResult> {
     };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
-    logger.error({ err, taskId: task.id }, 'Coding workflow execution failed');
+    logger.error({ err, taskId: task.taskId }, 'Coding workflow execution failed');
     return {
       success: false,
       output: `Coding Engine failed: ${msg}`,

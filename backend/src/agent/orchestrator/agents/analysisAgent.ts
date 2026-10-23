@@ -3,43 +3,62 @@ import { callAgentLLM } from '../llmHelper.js';
 
 export async function runAnalysisAgent(ctx: AgentContext): Promise<AgentResult> {
   const { task, signal, onActivity, dependencyResults } = ctx;
-  onActivity('Aggregating evidence and cross-checking task results...');
+  onActivity('Aggregating evidence across independent specialist workers...');
 
   if (signal.aborted) {
     throw new Error('Analysis task cancelled');
   }
 
   let evidence = '';
+  let successfulDeps = 0;
+  let partialFailureNotes = '';
+
   for (const [depId, res] of dependencyResults.entries()) {
-    evidence += `\n--- Evidence from Task [${depId}] ---\n${res}\n`;
+    if (res.startsWith('ERROR:') || res.includes('failed') || res.includes('halted')) {
+      partialFailureNotes += `- Specialist Task [${depId}] reported failure or incomplete results: ${res}\n`;
+    } else {
+      successfulDeps++;
+      evidence += `\n--- Output from Task [${depId}] ---\n${res}\n`;
+    }
   }
 
-  onActivity('Evaluating calculations, discrepancies, and gaps in evidence...');
+  onActivity('Evaluating budget constraints, cost calculations, and feasibility...');
 
-  const systemPrompt = `You are Karma's Specialist Analysis Agent.
+  const systemPrompt = `You are Karma's Specialist Budget & Analysis Agent.
 Role:
-- Compare structured results from multiple sources or tasks.
-- Validate any mathematical calculations, price comparisons, or budget constraints.
-- Identify discrepancies, contradictions, or missing evidence across sources.
-- Give an objective, critical assessment without sugarcoating or glossing over weaknesses.`;
+- Perform precise numerical analysis and budget aggregation based strictly on the outputs from specialist tasks.
+- If any specialist task failed or data was unavailable, compute with partial results, use realistic industry estimates, and clearly flag what is an estimate versus verified data.
+- Construct a detailed, clear Markdown table of estimated costs by category:
+  | Category | Detail / Selection | Estimated Cost (INR) | Verification Status |
+  | Accommodation | ... | ₹... | Verified / Estimated |
+  | Intercity & Local Transport | ... | ₹... | Verified / Estimated |
+  | Sightseeing & Monument Tickets | ... | ₹... | Verified / Estimated |
+  | Meals & Daily Buffer | ... | ₹... | Estimated Assumption |
+  | Emergency Contingency | ... | ₹... | Buffer |
+  | **TOTAL ESTIMATED COST** | ... | **₹...** | Feasible / Exceeds Budget |
+- Explicitly compare Total Estimated Cost against the target budget (e.g. ₹10,000).
+- State the remaining surplus or deficit clearly.
+- List all underlying assumptions (e.g. sharing type, travel class, booking season).`;
 
   const userPrompt = `Analysis Request: "${task.description}"
 
-Data to Analyze:
-${evidence || 'No prior evidence provided; evaluate the prompt based on analytical reasoning.'}
+Specialist Outputs Collected (${successfulDeps} successful):
+${evidence || 'No successful upstream agent outputs available.'}
+
+${partialFailureNotes ? `Notices on Incomplete Specialist Tasks:\n${partialFailureNotes}` : ''}
 
 Provide your structured output:
-### Comparative Matrix / Evaluation
-[Direct side-by-side comparison of options or code patterns]
+### Budget Feasibility & Cost Breakdown
+[Markdown table with itemized costs in INR and remaining buffer]
 
-### Calculations & Constraint Checks
-[Validation of budget, performance, trade-offs, or math]
+### Constraint & Math Verification
+[Step-by-step math check comparing total vs target limit]
 
-### Contradictions or Missing Evidence
-[Points where data disagrees or critical info is missing]
+### Key Assumptions & Trade-offs
+[Explicit assumptions made regarding accommodation type, transport modes, timing]
 
-### Verdict / Recommendation
-[Clear, data-driven conclusion]`;
+### Data Gaps & Confidence Level
+[Assessment of accuracy and any unverified items]`;
 
   const response = await callAgentLLM(
     [
@@ -58,6 +77,8 @@ Provide your structured output:
     output: response.text,
     metadata: {
       dependenciesAnalyzed: Array.from(dependencyResults.keys()),
+      successfulCount: successfulDeps,
+      hasPartialFailures: Boolean(partialFailureNotes),
     },
   };
 }

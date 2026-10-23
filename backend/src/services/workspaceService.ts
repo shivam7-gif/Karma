@@ -262,7 +262,7 @@ export class WorkspaceService {
     name: string;
     scripts: Record<string, string>;
     stack: string[];
-    testCommand?: string;
+    testCommand?: string | undefined;
     hasGit: boolean;
   }> {
     let pkg: any = {};

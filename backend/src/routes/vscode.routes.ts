@@ -139,12 +139,14 @@ vscodeRouter.post('/task/start', async (req: Request, res: Response) => {
           }
         };
 
-        const result = await codingWorkflowService.runCodingWorkflow(taskId, composedPrompt, {
-          targetFiles: activeFile ? [activeFile] : undefined,
-          activeCodeSnippet: selectedText,
+        const workflowOpts: { targetFiles?: string[]; activeCodeSnippet?: string; onProgress?: (msg: string) => void; autoRunTests?: boolean } = {
           onProgress: emitProgress,
           autoRunTests: !!autoRunTests,
-        });
+        };
+        if (activeFile) workflowOpts.targetFiles = [activeFile];
+        if (selectedText) workflowOpts.activeCodeSnippet = selectedText;
+
+        const result = await codingWorkflowService.runCodingWorkflow(taskId, composedPrompt, workflowOpts);
 
         const listeners = taskProgressEmitters.get(taskId) || [];
         for (const listener of listeners) {
@@ -180,7 +182,7 @@ vscodeRouter.post('/task/start', async (req: Request, res: Response) => {
 
 // 4. SSE Stream for Task Progress and Proposals
 vscodeRouter.get('/task/stream/:taskId', (req: Request, res: Response) => {
-  const { taskId } = req.params;
+  const taskId = String(req.params.taskId || '');
 
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
