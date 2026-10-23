@@ -20,6 +20,7 @@ export function useChatStream() {
     isStreaming,
     upsertOrchestratorTask,
     clearOrchestratorTasks,
+    setActiveWebsiteActivity,
   } = useAppStore();
 
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -98,6 +99,7 @@ export function useChatStream() {
       setIsStreaming(true);
       setStreamError(null);
       clearOrchestratorTasks();
+      setActiveWebsiteActivity(null);
       setAgentLifecycle({
         status: 'planning',
         message: 'Planning your request...',
@@ -185,7 +187,28 @@ export function useChatStream() {
                   completedAt: event.completedAt,
                   result: event.result,
                   error: event.error,
+                  metadata: event.metadata,
                 });
+
+                if (
+                  event.metadata?.visitedWebsites &&
+                  Array.isArray(event.metadata.visitedWebsites) &&
+                  event.metadata.visitedWebsites.length > 0
+                ) {
+                  const latestSite = event.metadata.visitedWebsites[event.metadata.visitedWebsites.length - 1];
+                  if (latestSite && latestSite.url) {
+                    setActiveWebsiteActivity({
+                      agentRole: event.metadata.role || latestSite.agentRole || event.agentType,
+                      websiteName: latestSite.title || latestSite.domain,
+                      domain: latestSite.domain,
+                      url: latestSite.url,
+                      action: event.activity || `Inspecting ${latestSite.domain}`,
+                      status: event.status === 'completed' ? 'completed' : event.status === 'failed' ? 'failed' : 'running',
+                      faviconUrl: latestSite.faviconUrl || `https://www.google.com/s2/favicons?domain=${latestSite.domain}&sz=32`,
+                      timestamp: event.timestamp,
+                    });
+                  }
+                }
                 break;
               }
 
@@ -196,6 +219,7 @@ export function useChatStream() {
                   agentType: event.agentType,
                   status: 'completed',
                   result: event.result,
+                  metadata: event.metadata,
                 });
                 break;
               }
@@ -206,6 +230,32 @@ export function useChatStream() {
                   message: event.message,
                   timestamp: event.timestamp,
                 });
+
+                if (event.data && typeof event.data === 'object') {
+                  const pData = event.data as Record<string, unknown>;
+                  if (pData.url || pData.domain) {
+                    const rawUrl = String(pData.url || '');
+                    let domain = String(pData.domain || '');
+                    if (!domain && rawUrl) {
+                      try {
+                        domain = new URL(rawUrl).hostname.replace(/^www\./, '');
+                      } catch {
+                        domain = 'web';
+                      }
+                    }
+                    setActiveWebsiteActivity({
+                      agentRole: String(pData.agentRole || 'Browser Automation'),
+                      websiteName: String(pData.siteName || domain),
+                      domain,
+                      url: rawUrl,
+                      action: event.message || 'Interacting with website',
+                      status: event.status === 'completed' ? 'completed' : event.status === 'error' ? 'failed' : 'running',
+                      screenshotUrl: pData.screenshot ? String(pData.screenshot) : undefined,
+                      faviconUrl: `https://www.google.com/s2/favicons?domain=${domain}&sz=32`,
+                      timestamp: event.timestamp || new Date().toISOString(),
+                    });
+                  }
+                }
                 break;
               }
 
@@ -245,6 +295,7 @@ export function useChatStream() {
 
               case 'done':
                 setIsStreaming(false);
+                setActiveWebsiteActivity((prev) => (prev ? { ...prev, status: 'completed' } : null));
                 setAgentLifecycle({
                   status: 'completed',
                   message: 'Completed.',

@@ -93,6 +93,25 @@ export type OrchestratorTaskStatus =
   | 'failed'
   | 'cancelled';
 
+export interface ResearchFinding {
+  title: string;
+  url: string;
+  domain: string;
+  snippet: string;
+  price?: string | undefined;
+  imageUrl?: string | undefined;
+  timestamp?: string | undefined;
+  agentRole?: string | undefined;
+}
+
+export interface VisitedWebsite {
+  title?: string | undefined;
+  domain: string;
+  url: string;
+  faviconUrl?: string | undefined;
+  agentRole?: string | undefined;
+}
+
 export interface ClientOrchestratorTask {
   taskId: string;
   sessionId: string;
@@ -100,12 +119,18 @@ export interface ClientOrchestratorTask {
   description: string;
   status: OrchestratorTaskStatus;
   dependencies: string[];
-  result?: string;
-  error?: string;
-  activity?: string;
+  result?: string | undefined;
+  error?: string | undefined;
+  activity?: string | undefined;
   createdAt: string;
-  startedAt?: string;
-  completedAt?: string;
+  startedAt?: string | undefined;
+  completedAt?: string | undefined;
+  metadata?: {
+    role?: string | undefined;
+    findings?: ResearchFinding[] | undefined;
+    visitedWebsites?: VisitedWebsite[] | undefined;
+    [key: string]: unknown;
+  } | undefined;
 }
 
 export interface TaskCreatedEvent extends BaseStreamEvent {
@@ -121,12 +146,18 @@ export interface TaskUpdatedEvent extends BaseStreamEvent {
   sessionId: string;
   agentType: OrchestratorAgentType;
   status: OrchestratorTaskStatus;
-  activity?: string;
-  startedAt?: string;
-  completedAt?: string;
-  result?: string;
-  error?: string;
+  activity?: string | undefined;
+  startedAt?: string | undefined;
+  completedAt?: string | undefined;
+  result?: string | undefined;
+  error?: string | undefined;
   timestamp: string;
+  metadata?: {
+    role?: string | undefined;
+    findings?: ResearchFinding[] | undefined;
+    visitedWebsites?: VisitedWebsite[] | undefined;
+    [key: string]: unknown;
+  } | undefined;
 }
 
 export interface TaskCompletedEvent extends BaseStreamEvent {
@@ -134,8 +165,14 @@ export interface TaskCompletedEvent extends BaseStreamEvent {
   taskId: string;
   sessionId: string;
   agentType: OrchestratorAgentType;
-  result?: string;
+  result?: string | undefined;
   timestamp: string;
+  metadata?: {
+    role?: string | undefined;
+    findings?: ResearchFinding[] | undefined;
+    visitedWebsites?: VisitedWebsite[] | undefined;
+    [key: string]: unknown;
+  } | undefined;
 }
 
 export type StreamEvent = 

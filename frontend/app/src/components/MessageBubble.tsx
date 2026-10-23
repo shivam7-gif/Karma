@@ -7,6 +7,7 @@ import type { Message } from '../api/types';
 import { ElicitationCard } from './ElicitationCard';
 import { CheckSquare, Pencil, Copy, Check } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
+import { UnifiedSwarmPanel } from './UnifiedSwarmPanel';
 import MessageActions from './chat-ai/MessageActions';
 import { preprocessStreamingMarkdown } from '../utils/markdownUtils';
 
@@ -243,6 +244,44 @@ const ChatMarkdownRenderer: React.FC<{ text: string; isStreaming: boolean }> = (
           // Flatten pre to let CodeBlock handle its own container & pre tag
           return <>{children}</>;
         },
+        a({ href, children }) {
+          return (
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                color: '#111111',
+                textDecoration: 'underline',
+                fontWeight: 500,
+              }}
+            >
+              {children}
+            </a>
+          );
+        },
+        img({ src, alt }) {
+          return (
+            <span style={{ display: 'block', margin: '8px 0' }}>
+              <img
+                src={src}
+                alt={alt || ''}
+                loading="lazy"
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '260px',
+                  borderRadius: '6px',
+                  border: '1px solid #e5e7eb',
+                  objectFit: 'cover',
+                  display: 'block',
+                }}
+                onError={(e) => {
+                  (e.currentTarget as HTMLElement).style.display = 'none';
+                }}
+              />
+            </span>
+          );
+        },
         table({ children }) {
           return (
             <div style={{ overflowX: 'auto', margin: '12px 0', maxWidth: '100%' }}>
@@ -264,11 +303,11 @@ const ChatMarkdownRenderer: React.FC<{ text: string; isStreaming: boolean }> = (
           return (
             <th
               style={{
-                borderBottom: '2px solid var(--border-glass, #e7e2d8)',
+                borderBottom: '2px solid #e5e7eb',
                 padding: '7px 12px',
                 fontWeight: 650,
-                background: 'rgba(0, 0, 0, 0.03)',
-                color: 'var(--text-primary, #19161d)',
+                background: '#f9fafb',
+                color: '#111111',
               }}
             >
               {children}
@@ -279,9 +318,9 @@ const ChatMarkdownRenderer: React.FC<{ text: string; isStreaming: boolean }> = (
           return (
             <td
               style={{
-                borderBottom: '1px solid var(--border-glass, #e7e2d8)',
+                borderBottom: '1px solid #e5e7eb',
                 padding: '7px 12px',
-                color: 'var(--text-primary, #19161d)',
+                color: '#111111',
               }}
             >
               {children}
@@ -295,7 +334,7 @@ const ChatMarkdownRenderer: React.FC<{ text: string; isStreaming: boolean }> = (
                 margin: '12px 0 6px 0',
                 fontSize: '16px',
                 fontWeight: 700,
-                color: 'var(--text-primary, #19161d)',
+                color: '#111111',
                 letterSpacing: '-0.01em',
               }}
             >
@@ -310,7 +349,7 @@ const ChatMarkdownRenderer: React.FC<{ text: string; isStreaming: boolean }> = (
                 margin: '11px 0 5px 0',
                 fontSize: '15px',
                 fontWeight: 700,
-                color: 'var(--text-primary, #19161d)',
+                color: '#111111',
                 letterSpacing: '-0.01em',
               }}
             >
@@ -325,7 +364,7 @@ const ChatMarkdownRenderer: React.FC<{ text: string; isStreaming: boolean }> = (
                 margin: '9px 0 4px 0',
                 fontSize: '14px',
                 fontWeight: 650,
-                color: 'var(--text-primary, #19161d)',
+                color: '#111111',
               }}
             >
               {children}
@@ -338,6 +377,7 @@ const ChatMarkdownRenderer: React.FC<{ text: string; isStreaming: boolean }> = (
               style={{
                 margin: '0 0 8px 0',
                 lineHeight: 1.6,
+                color: '#111111',
               }}
             >
               {children}
@@ -351,6 +391,7 @@ const ChatMarkdownRenderer: React.FC<{ text: string; isStreaming: boolean }> = (
                 margin: '4px 0 8px 0',
                 paddingLeft: '20px',
                 lineHeight: 1.6,
+                color: '#111111',
               }}
             >
               {children}
@@ -364,6 +405,7 @@ const ChatMarkdownRenderer: React.FC<{ text: string; isStreaming: boolean }> = (
                 margin: '4px 0 8px 0',
                 paddingLeft: '20px',
                 lineHeight: 1.6,
+                color: '#111111',
               }}
             >
               {children}
@@ -375,6 +417,7 @@ const ChatMarkdownRenderer: React.FC<{ text: string; isStreaming: boolean }> = (
             <li
               style={{
                 margin: '3px 0',
+                color: '#111111',
               }}
             >
               {children}
@@ -387,8 +430,8 @@ const ChatMarkdownRenderer: React.FC<{ text: string; isStreaming: boolean }> = (
               style={{
                 margin: '8px 0',
                 paddingLeft: '12px',
-                borderLeft: '3px solid var(--accent, #8b3dff)',
-                color: 'var(--text-secondary, #575260)',
+                borderLeft: '3px solid #111111',
+                color: '#4b5563',
                 fontStyle: 'italic',
               }}
             >
@@ -411,6 +454,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   const { deviceMode, setInputValue, isStreaming, messages } = useAppStore();
   const isUser = message.sender === 'user';
   const isCurrentlyStreaming = isStreaming && messages[messages.length - 1]?.id === message.id;
+  const assistantMessages = messages.filter((m) => m.sender === 'assistant');
+  const isLatestAssistant = !isUser && assistantMessages[assistantMessages.length - 1]?.id === message.id;
 
   // Render at most once per animation frame (requestAnimationFrame throttle)
   const [renderedText, setRenderedText] = useState(message.text);
@@ -456,18 +501,17 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       >
         {/* Message Content Container */}
         {isUser ? (
-          /* User Message: Crisp white strip with edit icon visible on hover */
+          /* User Message: compact, right-aligned, light-grey surface with subtle border */
           <div
             className="message-user-strip"
             style={{
-              background: '#ffffff',
-              border: '1px solid var(--border-glass, #e7e2d8)',
-              borderRadius: 'var(--r-lg, 16px) var(--r-lg, 16px) 4px var(--r-lg, 16px)',
-              padding: '10px 16px',
-              color: 'var(--text-primary, #19161d)',
+              background: '#f3f4f6',
+              border: '1px solid #e5e7eb',
+              borderRadius: '6px',
+              padding: '10px 14px',
+              color: '#111111',
               fontSize: '14.5px',
               lineHeight: 1.5,
-              boxShadow: 'var(--shadow-soft, 0 1px 3px rgba(0, 0, 0, 0.03))',
               display: 'flex',
               alignItems: 'center',
               gap: '10px',
@@ -485,22 +529,22 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               style={{
                 background: 'transparent',
                 border: 'none',
-                color: 'var(--text-muted, #8e8798)',
+                color: '#6b7280',
                 cursor: 'pointer',
                 padding: '3px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderRadius: 'var(--r-sm, 10px)',
+                borderRadius: '4px',
                 opacity: 0,
-                transition: 'all var(--transition-fast, 150ms ease)',
+                transition: 'all 150ms ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.color = 'var(--accent, #8b3dff)';
-                e.currentTarget.style.background = 'var(--surface-glass-hover, #f5f2ec)';
+                e.currentTarget.style.color = '#111111';
+                e.currentTarget.style.background = '#e5e7eb';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.color = 'var(--text-muted, #8e8798)';
+                e.currentTarget.style.color = '#6b7280';
                 e.currentTarget.style.background = 'transparent';
               }}
             >
@@ -508,7 +552,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             </button>
           </div>
         ) : (
-          /* Assistant Message: Clean Card with Karma label and Markdown */
+          /* Assistant Message: left-aligned, white background, black text, no unnecessary chat bubble */
           <div style={{ flex: 1, minWidth: 0 }}>
             {/* Karma label */}
             <div
@@ -517,35 +561,41 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 alignItems: 'center',
                 gap: '4px',
                 fontSize: '11px',
-                fontWeight: 600,
-                color: 'var(--accent, #8b3dff)',
-                letterSpacing: '0.04em',
-                marginBottom: '4px',
+                fontWeight: 700,
+                color: '#111111',
+                letterSpacing: '0.06em',
+                marginBottom: '6px',
                 textTransform: 'uppercase',
               }}
             >
               Karma
             </div>
 
+            {/* Unified Swarm Response Panel (Agent activity, Websites visited, Research findings & photos) */}
+            {isLatestAssistant && <UnifiedSwarmPanel />}
+
+            {/* Main AI Response / Final Synthesis Plan */}
             <div
-              className="message-assistant-card"
+              className="message-assistant-body"
               style={{
-                background: '#ffffff',
-                border: '1px solid var(--border-glass, #e7e2d8)',
-                borderRadius: '4px var(--r-lg, 16px) var(--r-lg, 16px) var(--r-lg, 16px)',
-                padding: '14px 18px',
-                boxShadow: 'var(--shadow-soft, 0 1px 4px rgba(0, 0, 0, 0.03))',
-                color: 'var(--text-primary, #19161d)',
+                background: '#FFFFFF',
+                color: '#111111',
                 fontSize: '14.5px',
                 lineHeight: 1.6,
                 wordBreak: 'break-word',
                 position: 'relative',
               }}
             >
-              <ChatMarkdownRenderer text={renderedText || '…'} isStreaming={isCurrentlyStreaming} />
-              {/* Only show action bar for replies longer than ~2 lines (> 80 chars) */}
+              {renderedText ? (
+                <ChatMarkdownRenderer text={renderedText} isStreaming={isCurrentlyStreaming} />
+              ) : isCurrentlyStreaming ? (
+                <div style={{ color: '#6b7280', fontSize: '13.5px', fontStyle: 'italic', padding: '4px 0' }}>
+                  Planning and coordinating swarm agents...
+                </div>
+              ) : null}
+
               {(message.text?.length || 0) > 80 && (
-                <div className="message-actions-wrapper">
+                <div className="message-actions-wrapper" style={{ marginTop: '8px' }}>
                   <MessageActions messageText={message.text} onRegenerate={onRegenerate} />
                 </div>
               )}

@@ -50,6 +50,7 @@ export interface TaskUpdatedEvent {
   result?: string | undefined;
   error?: string | undefined;
   timestamp: string;
+  metadata?: Record<string, unknown> | undefined;
 }
 
 export interface TaskCompletedEvent {
@@ -59,6 +60,7 @@ export interface TaskCompletedEvent {
   agentType: AgentType;
   result?: string | undefined;
   timestamp: string;
+  metadata?: Record<string, unknown> | undefined;
 }
 
 export type OrchestratorStreamEvent =

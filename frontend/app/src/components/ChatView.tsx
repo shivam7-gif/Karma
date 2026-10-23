@@ -1,7 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useAppStore } from '../store/appStore';
 import { MessageBubble } from './MessageBubble';
-import { AgentTasksPanel } from './AgentTasksPanel';
 import { useChatStream } from '../hooks/useChatStream';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 
@@ -10,20 +9,23 @@ interface ChatViewProps {
 }
 
 export const ChatView: React.FC<ChatViewProps> = ({ onSelectElicitationOption }) => {
-  const { messages, isStreaming, streamError, agentLifecycle } = useAppStore();
+  const { messages, isStreaming, streamError, agentLifecycle, orchestratorTasks } = useAppStore();
   const transcriptEndRef = useRef<HTMLDivElement>(null);
   const { handleSendMessage } = useChatStream();
 
   useEffect(() => {
     transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isStreaming, streamError, agentLifecycle]);
+  }, [messages, isStreaming, streamError, agentLifecycle, orchestratorTasks]);
 
   const lastAssistantMessage = [...messages].reverse().find((m) => m.sender === 'assistant');
   const lastUserMessage = [...messages].reverse().find((m) => m.sender === 'user');
 
   // True if streaming has started but no tokens have arrived yet in the assistant message
   const isWaitingForFirstToken =
-    isStreaming && lastAssistantMessage && (!lastAssistantMessage.text || lastAssistantMessage.text.trim().length === 0);
+    isStreaming &&
+    lastAssistantMessage &&
+    (!lastAssistantMessage.text || lastAssistantMessage.text.trim().length === 0) &&
+    orchestratorTasks.length === 0;
 
   const handleRegenerate = () => {
     if (lastUserMessage) {
@@ -46,11 +48,12 @@ export const ChatView: React.FC<ChatViewProps> = ({ onSelectElicitationOption })
         flexDirection: 'column',
         overflowY: 'auto',
         padding: '16px 20px 24px 20px',
+        background: '#FFFFFF',
       }}
     >
       <div style={{ flex: 1, width: '100%' }}>
         {messages.map((message) => {
-          // If this is the currently streaming empty assistant placeholder, don't render an empty bubble yet
+          // If this is the currently streaming empty assistant placeholder without tasks, don't render an empty bubble yet
           if (message.id === lastAssistantMessage?.id && isWaitingForFirstToken) {
             return null;
           }
@@ -64,69 +67,46 @@ export const ChatView: React.FC<ChatViewProps> = ({ onSelectElicitationOption })
           );
         })}
 
-        {/* Live Multi-Agent Monitoring View */}
-        <AgentTasksPanel />
-
-        {/* Live Agent Lifecycle Status Pill */}
-        {isStreaming && agentLifecycle && agentLifecycle.status !== 'completed' && (
+        {/* Live Single-Agent Lifecycle Status Badge (only when not in swarm mission) */}
+        {isStreaming && orchestratorTasks.length === 0 && agentLifecycle && agentLifecycle.status !== 'completed' && (
           <div
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: '8px',
-              padding: '6px 14px',
-              borderRadius: '9999px',
-              background:
-                agentLifecycle.status === 'controlling_screen'
-                  ? 'rgba(0, 145, 255, 0.08)'
-                  : agentLifecycle.status === 'waiting_for_user'
-                  ? 'rgba(245, 158, 11, 0.1)'
-                  : 'rgba(139, 61, 255, 0.06)',
-              border: `1px solid ${
-                agentLifecycle.status === 'controlling_screen'
-                  ? 'rgba(0, 145, 255, 0.3)'
-                  : agentLifecycle.status === 'waiting_for_user'
-                  ? 'rgba(245, 158, 11, 0.3)'
-                  : 'rgba(139, 61, 255, 0.2)'
-              }`,
-              color:
-                agentLifecycle.status === 'controlling_screen'
-                  ? '#0284c7'
-                  : agentLifecycle.status === 'waiting_for_user'
-                  ? '#d97706'
-                  : 'var(--accent, #8b3dff)',
+              padding: '5px 12px',
+              borderRadius: '4px',
+              background: '#f9fafb',
+              border: '1px solid #e5e7eb',
+              color: '#111111',
               fontSize: '12px',
               fontWeight: 500,
               marginBottom: '12px',
-              boxShadow: 'var(--shadow-soft, 0 1px 3px rgba(0,0,0,0.03))',
-              animation: 'fadeIn 0.2s ease',
             }}
           >
             <span
               style={{
-                width: '7px',
-                height: '7px',
+                width: '6px',
+                height: '6px',
                 borderRadius: '50%',
-                background: 'currentColor',
-                animation: 'typingPulse 1.2s infinite ease-in-out',
+                background: '#111111',
               }}
             />
             <span>{agentLifecycle.message}</span>
           </div>
         )}
 
-        {/* Small typing indicator before the first token arrives */}
+        {/* Small typing indicator before first token arrives in single agent mode */}
         {isWaitingForFirstToken && (
           <div
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '10px 16px',
-              borderRadius: 'var(--r-md, 14px)',
-              background: '#ffffff',
-              border: '1px solid var(--border-glass, #e7e2d8)',
-              boxShadow: 'var(--shadow-soft, 0 1px 3px rgba(0, 0, 0, 0.03))',
+              padding: '8px 14px',
+              borderRadius: '4px',
+              background: '#f9fafb',
+              border: '1px solid #e5e7eb',
               marginBottom: '16px',
               marginLeft: '0',
             }}

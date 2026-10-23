@@ -33,13 +33,14 @@ Role:
   1. Produce a detailed day-by-day itinerary (Day 1, Day 2, Day 3) with morning, afternoon, and evening activities, exact monument timings, and local transit advice.
   2. Provide a clear Master Budget Breakdown Table showing estimated costs for Accommodation, Transport, Sightseeing/Tickets, Meals, and Contingency Buffer, with Total vs Budget limit and remaining surplus/margin.
   3. Attribute findings clearly to the contributing specialist agents:
-     - 🏨 Accommodation Specialist
-     - 🚆 Transport Specialist
-     - 🏛️ Attractions & Itinerary Specialist
-     - 📊 Budget & Feasibility Analyst
+     - Accommodation Specialist
+     - Transport Specialist
+     - Attractions & Itinerary Specialist
+     - Budget & Feasibility Analyst
   4. Include a dedicated "Sources & Clickable Citations" section with real markdown links [Title](url).
   5. Include an "Assumptions, Estimates & Caveats" section clearly marking what is estimated vs verified live data.
   6. Include a "Consequential Action Approval Notice": Remind the user that reservations, ticket bookings, or financial transactions require explicit user confirmation before execution.
+- Strictly NO emojis anywhere in the response. Use clean, elegant markdown headers and bullet points.
 - If any specialist task encountered issues, report it transparently and provide a useful final answer based on the remaining evidence.`;
 
   const userPrompt = `Mission Goal: "${task.description}"

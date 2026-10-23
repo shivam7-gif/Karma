@@ -257,6 +257,9 @@ export class MultiAgentOrchestrator {
         task.result = finalResult?.output;
         task.error = finalResult?.error;
         task.completedAt = new Date().toISOString();
+        if (finalResult?.metadata) {
+          task.metadata = { ...task.metadata, ...finalResult.metadata };
+        }
 
         if (isSuccess) {
           completedTasks.add(task.taskId);
@@ -269,6 +272,7 @@ export class MultiAgentOrchestrator {
           result: task.result,
           error: task.error,
           completedAt: task.completedAt,
+          metadata: task.metadata,
         });
 
         if (isSuccess) {
@@ -278,6 +282,7 @@ export class MultiAgentOrchestrator {
             sessionId,
             agentType: task.agentType,
             result: task.result,
+            metadata: task.metadata,
             timestamp: new Date().toISOString(),
           });
         } else {
@@ -288,6 +293,7 @@ export class MultiAgentOrchestrator {
             agentType: task.agentType,
             status: 'failed',
             error: task.error,
+            metadata: task.metadata,
             timestamp: new Date().toISOString(),
           });
         }

@@ -11,6 +11,7 @@ import { ChatView } from './ChatView';
 import VoicePanel from './chat-ai/VoicePanel';
 import SoftAurora from './chat-ai/SoftAurora';
 import { SettingsModal } from './SettingsModal';
+import { WebsiteActivityOverlay } from './WebsiteActivityOverlay';
 import { IdeWorkspaceView } from './ide/IdeWorkspaceView';
 import { useAppStore } from '../store/appStore';
 import { useChatStream } from '../hooks/useChatStream';
@@ -67,7 +68,7 @@ export const AppShell: React.FC = () => {
         maxHeight: 'none',
         borderRadius: 0,
         position: 'relative',
-        background: 'var(--bg-app, #faf8f5)',
+        background: view === 'chat' ? '#FFFFFF' : 'var(--bg-app, #faf8f5)',
         boxShadow: 'none',
         display: 'flex',
         flexDirection: 'column',
@@ -90,6 +91,7 @@ export const AppShell: React.FC = () => {
           position: 'relative',
           zIndex: 10,
           overflow: 'hidden',
+          background: view === 'chat' ? '#FFFFFF' : 'transparent',
           padding: view === 'ide' ? '0 0 0 84px' : view === 'chat' ? '0 24px 16px 88px' : '0 32px 24px 32px',
         }}
       >
@@ -218,6 +220,9 @@ export const AppShell: React.FC = () => {
 
       {/* Bottom Collapsible Trace Panel Console */}
       <TracePanel />
+
+      {/* Live Website Overlay for MCP and Browser Activity */}
+      <WebsiteActivityOverlay />
 
       <style>{`
         @keyframes fadeIn {

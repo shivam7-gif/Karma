@@ -20,6 +20,18 @@ const getInitialUser = (): UserProfile => {
   return { name: 'Shiva', email: 'shiva@example.com' };
 };
 
+export interface ActiveWebsiteActivity {
+  agentRole?: string | undefined;
+  websiteName?: string | undefined;
+  domain: string;
+  url: string;
+  action: string;
+  status: 'running' | 'completed' | 'failed' | 'cancelled';
+  faviconUrl?: string | undefined;
+  screenshotUrl?: string | undefined;
+  timestamp: string;
+}
+
 interface AppState {
   user: UserProfile | null;
   view: 'home' | 'chat' | 'ide';
@@ -31,6 +43,7 @@ interface AppState {
   messages: Message[];
   traceItems: TraceItem[];
   orchestratorTasks: import('../api/types').ClientOrchestratorTask[];
+  activeWebsiteActivity: ActiveWebsiteActivity | null;
   isStreaming: boolean;
   streamError: string | null;
   sessionId: string;
@@ -40,6 +53,7 @@ interface AppState {
   isSettingsOpen: boolean;
 
   // Actions
+  setActiveWebsiteActivity: (activity: ActiveWebsiteActivity | null | ((prev: ActiveWebsiteActivity | null) => ActiveWebsiteActivity | null)) => void;
   setAgentLifecycle: (lifecycle: { status: AgentLifecycleStatus; message: string; tool?: string; timestamp?: string } | null) => void;
   upsertOrchestratorTask: (task: Partial<import('../api/types').ClientOrchestratorTask> & { taskId: string }) => void;
   clearOrchestratorTasks: () => void;
@@ -84,6 +98,7 @@ export const useAppStore = create<AppState>((set) => ({
   messages: [],
   traceItems: [],
   orchestratorTasks: [],
+  activeWebsiteActivity: null,
   isStreaming: false,
   streamError: null,
   sessionId: `session_${Date.now()}`,
@@ -91,13 +106,25 @@ export const useAppStore = create<AppState>((set) => ({
   isVoiceModalOpen: false,
   isSettingsOpen: false,
 
+  setActiveWebsiteActivity: (param) =>
+    set((state) => ({
+      activeWebsiteActivity: typeof param === 'function' ? param(state.activeWebsiteActivity) : param,
+    })),
   setAgentLifecycle: (agentLifecycle) => set({ agentLifecycle }),
   upsertOrchestratorTask: (taskPatch) =>
     set((state) => {
       const idx = state.orchestratorTasks.findIndex((t) => t.taskId === taskPatch.taskId);
       if (idx >= 0) {
         const copy = [...state.orchestratorTasks];
-        copy[idx] = { ...copy[idx], ...taskPatch } as import('../api/types').ClientOrchestratorTask;
+        const existing = copy[idx]!;
+        copy[idx] = {
+          ...existing,
+          ...taskPatch,
+          metadata: {
+            ...(existing.metadata || {}),
+            ...(taskPatch.metadata || {}),
+          },
+        } as import('../api/types').ClientOrchestratorTask;
         return { orchestratorTasks: copy };
       }
       return {

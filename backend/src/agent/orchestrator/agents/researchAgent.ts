@@ -15,8 +15,25 @@ export async function runResearchAgent(ctx: AgentContext): Promise<AgentResult> 
   // 1. Determine search query from task description
   const cleanDescription = task.description.replace(/^research\s+/i, '').trim();
   const citations: string[] = [];
+  const structuredFindings: Array<{
+    title: string;
+    url: string;
+    domain: string;
+    snippet: string;
+    price?: string | undefined;
+    imageUrl?: string | undefined;
+    timestamp: string;
+    agentRole: string;
+  }> = [];
+  const visitedWebsites: Array<{
+    title?: string | undefined;
+    domain: string;
+    url: string;
+    agentRole: string;
+  }> = [];
   let gatheredData = '';
   let providerUsed = 'Direct Knowledge';
+  const role = (task.metadata?.role as string) || 'Research Specialist';
 
   const isShoppingQuery =
     /\b(buy|shop|cart|amazon|purchase|price of|sneakers|shoes|headphone|laptop|phone|gadget)\b/i.test(cleanDescription) &&
@@ -43,6 +60,27 @@ export async function runResearchAgent(ctx: AgentContext): Promise<AgentResult> 
               prodResults.products
                 .map((p, i) => {
                   citations.push(p.url);
+                  let domain = 'online';
+                  try {
+                    domain = new URL(p.url).hostname.replace(/^www\./, '');
+                  } catch {
+                    domain = p.seller || 'online';
+                  }
+                  structuredFindings.push({
+                    title: p.title,
+                    url: p.url,
+                    domain,
+                    snippet: `${p.seller || 'Online listing'} - Available in verified product search`,
+                    price: p.price || `₹${p.priceINR}`,
+                    timestamp: new Date().toISOString(),
+                    agentRole: role,
+                  });
+                  visitedWebsites.push({
+                    title: p.seller || domain,
+                    domain,
+                    url: p.url,
+                    agentRole: role,
+                  });
                   return `${i + 1}. ${p.title} - ${p.price || ('₹' + p.priceINR)} (${p.seller || 'Online'}) [Source: ${p.url}]`;
                 })
                 .join('\n');
@@ -67,6 +105,36 @@ export async function runResearchAgent(ctx: AgentContext): Promise<AgentResult> 
           webResults.results
             .map((r, i) => {
               citations.push(r.url);
+              const domain = r.domain || (r.url ? new URL(r.url).hostname.replace(/^www\./, '') : 'web');
+              
+              const findingObj: {
+                title: string;
+                url: string;
+                domain: string;
+                snippet: string;
+                price?: string | undefined;
+                imageUrl?: string | undefined;
+                timestamp: string;
+                agentRole: string;
+              } = {
+                title: r.title,
+                url: r.url,
+                domain,
+                snippet: r.snippet,
+                timestamp: r.timestamp || new Date().toISOString(),
+                agentRole: role,
+              };
+              if (r.price) findingObj.price = r.price;
+              if (r.imageUrl) findingObj.imageUrl = r.imageUrl;
+              structuredFindings.push(findingObj);
+
+              visitedWebsites.push({
+                title: r.source || r.title,
+                domain,
+                url: r.url,
+                agentRole: role,
+              });
+
               return `${i + 1}. ${r.title}\n   Snippet: ${r.snippet}\n   URL: ${r.url}${r.price ? `\n   Listed Price: ${r.price}` : ''}`;
             })
             .join('\n\n');
@@ -98,7 +166,8 @@ Role:
 - Clearly distinguish between VERIFIED FACTS and UNCERTAINTIES/ESTIMATES.
 - If data is incomplete or unavailable, explicitly identify what could not be verified.
 - Do not invent claims, prices, room rates, fares, or availability.
-- Always include realistic estimated cost ranges for items where exact real-time booking costs fluctuate (e.g. dynamic hostel rates, auto-rickshaw fares).`;
+- Always include realistic estimated cost ranges for items where exact real-time booking costs fluctuate (e.g. dynamic hostel rates, auto-rickshaw fares).
+- Do not use emojis anywhere in your response.`;
 
   const userPrompt = `Research Request: "${task.description}"
 
@@ -135,6 +204,9 @@ Please return your structured findings formatted as:
     output: response.text,
     citations,
     metadata: {
+      role,
+      findings: structuredFindings,
+      visitedWebsites,
       sourcesCount: citations.length,
       retrievedAt: new Date().toISOString(),
       provider: providerUsed,
