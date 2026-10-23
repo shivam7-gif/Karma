@@ -9,6 +9,11 @@ export function isComplexPrompt(prompt: string): boolean {
     return false;
   }
 
+  // Direct shopping actions with cart execution should run directly via Karma's MCP shop_amazon tool
+  if (/\b(add\s+to\s+cart|add.*cart|buy\s+on\s+amazon|checkout)\b/i.test(p)) {
+    return false;
+  }
+
   // Travel, trips, tours, and itineraries (P0 requirement)
   if (
     p.includes('jaipur') ||
@@ -84,11 +89,22 @@ export async function generatePlan(
     };
   }
 
-  const isTripPrompt = /\b(trip|itinerary|jaipur|travel|tour|vacation|budget of|under\s+(?:₹|rs)?\s*\d+)\b/i.test(prompt);
+  const isShoppingProductPrompt =
+    /\b(laptop|laptops|shoes|shoe|sneakers|phone|phones|gadget|gadgets|headphone|headphones|product|products|item|items)\b/i.test(prompt) ||
+    /\b(buy|shop|cart|amazon)\b/i.test(prompt);
+
+  const isTripPrompt =
+    !isShoppingProductPrompt &&
+    /\b(trip|itinerary|jaipur|travel|tour|vacation|holiday|getaway|stay|monument|hotel|hostel|flight|train)\b/i.test(prompt);
 
   // For trip planning missions, ensure the plan strictly follows the required 3 independent specialist pattern
   if (isTripPrompt) {
     return buildTripMissionPlan(prompt, sessionId);
+  }
+
+  // For product / shopping multi-agent comparison missions
+  if (isShoppingProductPrompt) {
+    return buildProductComparisonPlan(prompt, sessionId);
   }
 
   // Generate DAG plan using LLM or structured rules
@@ -238,6 +254,46 @@ function buildTripMissionPlan(prompt: string, sessionId: string): OrchestratorPl
         description: `Chief Planner compile final verified ${days} ${destination} itinerary with day-by-day morning/afternoon/evening schedule, master cost breakdown table, specialist agent attributions, clickable sources, and consequential booking notices.`,
         dependencies: [`${missionId}-budget`],
         metadata: { role: 'Chief Planner Synthesis' },
+      },
+    ],
+  };
+}
+
+function buildProductComparisonPlan(prompt: string, sessionId: string): OrchestratorPlan {
+  const missionId = `mission-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  return {
+    planId: missionId,
+    sessionId,
+    summary: `Product research and comparison: ${prompt.slice(0, 60)}`,
+    isMultiAgent: true,
+    tasks: [
+      {
+        taskId: `${missionId}-specs`,
+        agentType: 'research',
+        description: `Research verified top product options, specifications, models, and real source links for: "${prompt}".`,
+        dependencies: [],
+        metadata: { role: 'Product Research Specialist' },
+      },
+      {
+        taskId: `${missionId}-prices`,
+        agentType: 'research',
+        description: `Research live pricing in INR, deals, seller ratings, and verified merchant links for: "${prompt}".`,
+        dependencies: [],
+        metadata: { role: 'Pricing & Deals Specialist' },
+      },
+      {
+        taskId: `${missionId}-analysis`,
+        agentType: 'analysis',
+        description: `Compare specifications, performance benchmarks, and price-to-value ratios across the researched options.`,
+        dependencies: [`${missionId}-specs`, `${missionId}-prices`],
+        metadata: { role: 'Value & Review Analyst' },
+      },
+      {
+        taskId: `${missionId}-chief-planner`,
+        agentType: 'synthesis',
+        description: `Chief Planner compile final product recommendation ranking, verified specs table, exact prices in INR, source links, and purchase advice.`,
+        dependencies: [`${missionId}-analysis`],
+        metadata: { role: 'Chief Planner' },
       },
     ],
   };
