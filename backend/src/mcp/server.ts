@@ -12,6 +12,7 @@ import { mcpConfig } from './config.js';
 import type { McpToolResponse } from './types.js';
 import { searchProducts } from '../tools/shopping/searchProducts.js';
 import { runAmazonShoppingWorkflow } from '../tools/shopping/amazonShoppingAgent.js';
+import { appBuilderService } from '../services/appBuilder/index.js';
 
 const app = express();
 
@@ -351,6 +352,65 @@ export function createMcpServer(): McpServer {
             {
               type: 'text',
               text: error instanceof Error ? error.message : 'Amazon shopping automation failed.',
+            },
+          ],
+        };
+      }
+    }
+  );
+
+  // 10. build_external_app: Delegates software development tasks to external AI app builders (Manus and Replit)
+  server.tool(
+    'build_external_app',
+    'Delegate full-stack application creation, frontend prototyping, and software development tasks to external AI app builders (Manus and Replit). Formulates complete 10-part project specifications, selects the best provider, triggers build tasks, and returns live preview or workspace URLs.',
+    {
+      prompt: z
+        .string()
+        .min(10)
+        .describe('User app building request or detailed specification (e.g. "Create a responsive food delivery app with authentication, restaurant listings, search, cart, checkout, order tracking, and an admin dashboard")'),
+      provider: z
+        .enum(['auto', 'manus', 'replit'])
+        .optional()
+        .describe("Provider preference: 'auto' (smart selection), 'manus' (Manus AI), or 'replit' (Replit Agent)"),
+    },
+    async ({ prompt, provider }): Promise<McpToolResponse> => {
+      try {
+        const build = await appBuilderService.buildApp(prompt, {
+          sessionId: `mcp-${Date.now()}`,
+          userId: 'default-user',
+          providerOverride: provider || 'auto',
+        });
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  status: 'ok',
+                  provider: build.selectedProviderName,
+                  selectionReason: build.selectionReason,
+                  title: build.specification.title,
+                  taskStatus: build.result.status,
+                  previewUrl: build.result.previewUrl,
+                  projectUrl: build.result.projectUrl,
+                  continueUrl: build.result.continueActionUrl,
+                  outputSummary: build.result.outputSummary,
+                  manualActionsRemaining: build.result.manualActionsRemaining,
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: 'text',
+              text: error instanceof Error ? error.message : 'App building delegation failed.',
             },
           ],
         };

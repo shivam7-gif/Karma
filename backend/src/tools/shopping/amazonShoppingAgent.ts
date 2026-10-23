@@ -66,7 +66,13 @@ export async function runAmazonShoppingWorkflow(
   };
 
   try {
-    emitProgress('controlling_screen', 'Starting browser automation session...', { budgetINR: budget });
+    emitProgress('controlling_screen', 'Starting browser automation session...', {
+      url: 'https://www.amazon.in/',
+      domain: 'amazon.in',
+      siteName: 'Amazon India',
+      agentRole: 'Amazon Shopping Agent (Playwright)',
+      budgetINR: budget,
+    });
 
     // 1. Launch screen overlay
     await overlay.start();
@@ -78,7 +84,12 @@ export async function runAmazonShoppingWorkflow(
     // Register stop handlers
     const stopCleanup = overlay.onStop(async (event) => {
       console.log(`[AmazonShoppingAgent] Stopped via ${event.reason}`);
-      emitProgress('stopped', `Automation stopped via ${event.reason}`);
+      emitProgress('stopped', `Automation stopped via ${event.reason}`, {
+        url: 'https://www.amazon.in/',
+        domain: 'amazon.in',
+        siteName: 'Amazon India',
+        agentRole: 'Amazon Shopping Agent (Playwright)',
+      });
       try {
         if (page) await page.close().catch(() => {});
         if (browser) await browser.close().catch(() => {});
@@ -110,7 +121,14 @@ export async function runAmazonShoppingWorkflow(
 
     // Step 1: Open Amazon
     checkAborted();
-    emitProgress('searching', 'Searching Amazon.in for products...', { query, budgetINR: budget });
+    emitProgress('searching', 'Searching Amazon.in for products...', {
+      query,
+      budgetINR: budget,
+      url: 'https://www.amazon.in/',
+      domain: 'amazon.in',
+      siteName: 'Amazon India',
+      agentRole: 'Amazon Shopping Agent (Playwright)',
+    });
     overlay.setStatus('searching', 'Searching Amazon', undefined, {
       activity: 'Opening Amazon.in and locating product search bar.',
       budgetINR: budget,
@@ -229,6 +247,11 @@ export async function runAmazonShoppingWorkflow(
     emitProgress('analyzing', `Comparing ${candidates.length} products with AI...`, {
       candidatesFound: candidates.length,
       budgetINR: budget,
+      query,
+      url: `https://www.amazon.in/s?k=${encodeURIComponent(query)}`,
+      domain: 'amazon.in',
+      siteName: 'Amazon India',
+      agentRole: 'Amazon Shopping Agent (Playwright)',
     });
 
     overlay.setStatus('analyzing', 'Comparing products', undefined, {
@@ -285,6 +308,11 @@ export async function runAmazonShoppingWorkflow(
     emitProgress('opening_product', `Opening selected product page to verify live details...`, {
       title: chosen.title,
       price: chosen.price,
+      budgetINR: budget,
+      url: chosen.url,
+      domain: 'amazon.in',
+      siteName: 'Amazon India',
+      agentRole: 'Amazon Shopping Agent (Playwright)',
     });
 
     overlay.setStatus('opening_product', 'Inspecting product', undefined, {
@@ -335,7 +363,15 @@ export async function runAmazonShoppingWorkflow(
 
     // Step 7: Add to Cart
     checkAborted();
-    emitProgress('adding_to_cart', `Adding verified item to cart...`, { title: actualTitle, price: livePriceText });
+    emitProgress('adding_to_cart', `Adding verified item to cart...`, {
+      title: actualTitle,
+      price: livePriceText,
+      budgetINR: budget,
+      url: chosen.url,
+      domain: 'amazon.in',
+      siteName: 'Amazon India',
+      agentRole: 'Amazon Shopping Agent (Playwright)',
+    });
 
     overlay.setStatus('adding_to_cart', 'Adding to cart', undefined, {
       activity: 'Submitting Add to Cart for verified product.',
@@ -361,7 +397,15 @@ export async function runAmazonShoppingWorkflow(
 
     // Step 8: Open Cart explicitly
     checkAborted();
-    emitProgress('adding_to_cart', 'Reviewing cart contents...', { cartUrl: 'https://www.amazon.in/gp/cart/view.html' });
+    emitProgress('adding_to_cart', 'Reviewing cart contents...', {
+      title: actualTitle,
+      price: livePriceText,
+      cartUrl: 'https://www.amazon.in/gp/cart/view.html',
+      url: 'https://www.amazon.in/gp/cart/view.html',
+      domain: 'amazon.in',
+      siteName: 'Amazon India',
+      agentRole: 'Amazon Shopping Agent (Playwright)',
+    });
 
     overlay.setStatus('adding_to_cart', 'Reviewing cart', undefined, {
       activity: 'Cart opened. Confirming product presence before checkout review.',
@@ -392,7 +436,15 @@ export async function runAmazonShoppingWorkflow(
 
     let checkoutReached = false;
     if (await checkout.isVisible().catch(() => false)) {
-      emitProgress('checkout_review', 'Navigating to checkout review...', { checkoutStatus: 'Navigating to checkout review' });
+      emitProgress('checkout_review', 'Navigating to checkout review...', {
+        checkoutStatus: 'Navigating to checkout review',
+        title: actualTitle,
+        price: livePriceText,
+        url: 'https://www.amazon.in/gp/buy/spc/handlers/display.html',
+        domain: 'amazon.in',
+        siteName: 'Amazon India',
+        agentRole: 'Amazon Shopping Agent (Playwright)',
+      });
       await checkout.click();
       await page.waitForTimeout(2500);
       checkoutReached = true;
@@ -410,7 +462,14 @@ export async function runAmazonShoppingWorkflow(
         price: livePriceText,
         url: chosen.url,
       },
+      title: actualTitle,
+      price: livePriceText,
+      budgetINR: budget,
       checkoutReached,
+      url: 'https://www.amazon.in/gp/cart/view.html',
+      domain: 'amazon.in',
+      siteName: 'Amazon India',
+      agentRole: 'Amazon Shopping Agent (Playwright)',
     });
 
     overlay.setStatus('checkout_review', 'Checkout review - Ready for manual confirmation', undefined, {

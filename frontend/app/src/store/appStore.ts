@@ -30,6 +30,9 @@ export interface ActiveWebsiteActivity {
   faviconUrl?: string | undefined;
   screenshotUrl?: string | undefined;
   timestamp: string;
+  productTitle?: string | undefined;
+  productPrice?: string | undefined;
+  budgetINR?: number | undefined;
 }
 
 interface AppState {
@@ -51,8 +54,10 @@ interface AppState {
 
   isVoiceModalOpen: boolean;
   isSettingsOpen: boolean;
+  appBuilderProvider: 'auto' | 'manus' | 'replit';
 
   // Actions
+  setAppBuilderProvider: (provider: 'auto' | 'manus' | 'replit') => void;
   setActiveWebsiteActivity: (activity: ActiveWebsiteActivity | null | ((prev: ActiveWebsiteActivity | null) => ActiveWebsiteActivity | null)) => void;
   setAgentLifecycle: (lifecycle: { status: AgentLifecycleStatus; message: string; tool?: string; timestamp?: string } | null) => void;
   upsertOrchestratorTask: (task: Partial<import('../api/types').ClientOrchestratorTask> & { taskId: string }) => void;
@@ -105,7 +110,9 @@ export const useAppStore = create<AppState>((set) => ({
   agentLifecycle: null,
   isVoiceModalOpen: false,
   isSettingsOpen: false,
+  appBuilderProvider: 'auto',
 
+  setAppBuilderProvider: (appBuilderProvider) => set({ appBuilderProvider }),
   setActiveWebsiteActivity: (param) =>
     set((state) => ({
       activeWebsiteActivity: typeof param === 'function' ? param(state.activeWebsiteActivity) : param,

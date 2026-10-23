@@ -1,6 +1,7 @@
 import type { AgentType, OrchestratorPlan } from './types.js';
 import { callAgentLLM } from './llmHelper.js';
 import { logger } from '../../lib/logger.js';
+import { isAppBuildingPrompt } from '../../services/appBuilder/index.js';
 
 export function isComplexPrompt(prompt: string): boolean {
   const p = prompt.trim().toLowerCase();
@@ -9,8 +10,16 @@ export function isComplexPrompt(prompt: string): boolean {
     return false;
   }
 
+  // App building requests delegate directly to external AI app builders (Manus / Replit)
+  if (isAppBuildingPrompt(prompt)) {
+    return false;
+  }
+
   // Direct shopping actions with cart execution should run directly via Karma's MCP shop_amazon tool
-  if (/\b(add\s+to\s+cart|add.*cart|buy\s+on\s+amazon|checkout)\b/i.test(p)) {
+  if (
+    /\b(add\s+to\s+cart|add.*cart|buy\s+on\s+amazon|shop\s+on\s+amazon|checkout|playwright|shop_amazon)\b/i.test(p) ||
+    (/\b(amazon)\b/i.test(p) && /\b(buy|shop|cart|creatine|purchase|product|order|overlay|connect|mcp|automate|find)\b/i.test(p))
+  ) {
     return false;
   }
 

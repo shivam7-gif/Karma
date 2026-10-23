@@ -243,6 +243,10 @@ export function useChatStream() {
                         domain = 'web';
                       }
                     }
+                    const prodTitle = pData.title ? String(pData.title) : (pData.product as any)?.title ? String((pData.product as any).title) : undefined;
+                    const prodPrice = pData.price ? String(pData.price) : (pData.product as any)?.price ? String((pData.product as any).price) : undefined;
+                    const budgetVal = typeof pData.budgetINR === 'number' ? pData.budgetINR : undefined;
+
                     setActiveWebsiteActivity({
                       agentRole: String(pData.agentRole || 'Browser Automation'),
                       websiteName: String(pData.siteName || domain),
@@ -253,6 +257,9 @@ export function useChatStream() {
                       screenshotUrl: pData.screenshot ? String(pData.screenshot) : undefined,
                       faviconUrl: `https://www.google.com/s2/favicons?domain=${domain}&sz=32`,
                       timestamp: event.timestamp || new Date().toISOString(),
+                      productTitle: prodTitle,
+                      productPrice: prodPrice,
+                      budgetINR: budgetVal,
                     });
                   }
                 }

@@ -19,7 +19,9 @@
     "test": "vitest run --no-file-parallelism",
     "test:watch": "vitest --no-file-parallelism",
     "overlay": "electron src/overlay/electron-main.cjs",
-    "test:amazon": "tsx --env-file=.env test/test-amazon.ts"
+    "test:amazon": "tsx --env-file=.env test/test-amazon.ts",
+    "test:app-builder": "tsx --env-file=.env test/test_app_builder.ts",
+    "test:prompt": "tsx --env-file=.env test/test_live_chat_prompt.ts"
   },
   "dependencies": {
     "@langchain/aws": "1.4.6",

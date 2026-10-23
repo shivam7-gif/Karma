@@ -20,6 +20,9 @@ export const WebsiteActivityOverlay: React.FC = () => {
     status,
     faviconUrl,
     screenshotUrl,
+    productTitle,
+    productPrice,
+    budgetINR,
   } = activeWebsiteActivity;
 
   const handleClose = () => {
@@ -188,6 +191,36 @@ export const WebsiteActivityOverlay: React.FC = () => {
             <span style={{ color: '#6b7280', fontSize: '12px' }}>Status:</span>
             <span style={{ fontWeight: 600, color: statusColor }}>{statusLabel}</span>
           </div>
+
+          {/* Live Product Intelligence Box if available */}
+          {(productTitle || productPrice) && (
+            <div
+              style={{
+                marginTop: '10px',
+                marginBottom: '10px',
+                padding: '9px 12px',
+                borderRadius: '6px',
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <span style={{ fontSize: '10.5px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Live Product
+                </span>
+                {productPrice && (
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: '#16a34a' }}>
+                    {productPrice} {budgetINR ? `(Under ₹${budgetINR})` : ''}
+                  </span>
+                )}
+              </div>
+              {productTitle && (
+                <div style={{ fontSize: '12px', fontWeight: 500, color: '#0f172a', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  {productTitle}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Screenshot / page preview when available */}
           {screenshotUrl && !imageError && (

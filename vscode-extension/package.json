@@ -13,13 +13,16 @@
     "Linters"
   ],
   "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "contributes": {
     "viewsContainers": {
       "activitybar": [
         {
           "id": "karma-container",
           "title": "Karma AI",
-          "icon": "$(sparkle)"
+          "icon": "resources/icon.svg"
         }
       ]
     },

@@ -4,6 +4,7 @@ import type { LLMToolDefinition } from '../llm/types.js';
 import { logger } from '../lib/logger.js';
 import { mcpConfig } from './config.js';
 import { runAmazonShoppingWorkflow } from '../tools/shopping/amazonShoppingAgent.js';
+import { appBuilderService } from '../services/appBuilder/index.js';
 
 export interface McpServerConfig {
   id: string;
@@ -181,6 +182,30 @@ export class MultiMcpManager {
     if (discovered.length === 0) {
       // Fallback built-in tools to guarantee instant availability
       const fallbackTools: DiscoveredTool[] = [
+        {
+          serverId: 'karma',
+          serverName: 'Karma MCP Server',
+          rawName: 'build_external_app',
+          name: 'build_external_app',
+          description:
+            'Delegate full-stack application creation, frontend prototyping, and software development tasks to external AI app builders (Manus and Replit). Formulates complete 10-part project specifications, selects the best provider, triggers build tasks, and returns live preview or workspace URLs.',
+          parameters: {
+            type: 'object',
+            properties: {
+              prompt: {
+                type: 'string',
+                description: 'User app building request or detailed specification',
+              },
+              provider: {
+                type: 'string',
+                enum: ['auto', 'manus', 'replit'],
+                description: 'Provider preference: auto, manus, or replit',
+              },
+            },
+            required: ['prompt'],
+          },
+          isConsequential: false,
+        },
         {
           serverId: 'karma',
           serverName: 'Karma MCP Server',
@@ -414,6 +439,45 @@ export class MultiMcpManager {
           toolName,
           serverId: 'karma',
           result: `Amazon shopping workflow failed: ${errorMsg}`,
+          durationMs: Date.now() - startTime,
+          error: errorMsg,
+        };
+      }
+    }
+
+    // Fast-path for build_external_app: delegation to external AI app builders
+    if (toolName === 'build_external_app') {
+      try {
+        const prompt = (args.prompt as string) || '';
+        const providerPreference = (args.provider as string) || 'auto';
+
+        const build = await appBuilderService.buildApp(prompt, {
+          sessionId: `mcp-${Date.now()}`,
+          userId: 'default-user',
+          providerOverride: providerPreference,
+          ...(options?.signal ? { signal: options.signal } : {}),
+          ...(options?.onProgress ? { onProgress: options.onProgress } : {}),
+        });
+
+        return {
+          success: build.result.status === 'completed' || build.result.status === 'manual_action_required',
+          toolName,
+          serverId: 'karma',
+          result: build.formattedChatResponse,
+          data: {
+            specification: build.specification,
+            result: build.result,
+          },
+          durationMs: Date.now() - startTime,
+          error: build.result.error,
+        };
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        return {
+          success: false,
+          toolName,
+          serverId: 'karma',
+          result: `App building delegation failed: ${errorMsg}`,
           durationMs: Date.now() - startTime,
           error: errorMsg,
         };

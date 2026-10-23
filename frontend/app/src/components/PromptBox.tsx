@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Paperclip, Mic, ArrowUp, Square } from 'lucide-react';
+import { Paperclip, Mic, ArrowUp, Square, ShoppingBag, Code2 } from 'lucide-react';
 import { BrandRingIcon } from './BrandLogo';
 import { useSpeech } from '../hooks/useSpeech';
 import { useAppStore } from '../store/appStore';
@@ -24,7 +24,7 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { openVoiceModal, isStreaming } = useAppStore();
+  const { openVoiceModal, isStreaming, agentLifecycle, appBuilderProvider, setAppBuilderProvider } = useAppStore();
   const { stopStream } = useChatStream();
 
   const { isListening, transcript, stopListening } = useSpeech({
@@ -66,7 +66,18 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
     const trimmed = value.trim();
     // Safe prevention of duplicate submissions & empty submissions
     if (!trimmed || disabled || isStreaming) return;
-    onSubmit(trimmed);
+
+    let finalPrompt = trimmed;
+    if (
+      appBuilderProvider !== 'auto' &&
+      /\b(app|application|platform|dashboard|system|website|create|build|scaffold)\b/i.test(trimmed) &&
+      !trimmed.toLowerCase().includes('manus') &&
+      !trimmed.toLowerCase().includes('replit')
+    ) {
+      finalPrompt = `${trimmed} (using ${appBuilderProvider})`;
+    }
+
+    onSubmit(finalPrompt);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -98,7 +109,23 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
     stopStream();
   };
 
+  const handleAmazonClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (disabled || isStreaming) return;
+    const trimmed = value.trim();
+    if (!trimmed) {
+      onSubmit('Find the best creatine monohydrate under ₹500 on Amazon and add to cart with live overlay');
+    } else if (trimmed.toLowerCase().includes('amazon')) {
+      onSubmit(trimmed);
+    } else {
+      onSubmit(`Find ${trimmed} on Amazon under ₹1000 and add to cart with live overlay`);
+    }
+  };
+
   const hasText = value.trim().length > 0;
+  const isScreenControlActive =
+    isStreaming &&
+    (agentLifecycle?.tool === 'shop_amazon' || agentLifecycle?.status === 'controlling_screen');
 
   return (
     <form
@@ -113,6 +140,39 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
         ...style,
       }}
     >
+      {/* Live Playwright & Overlay Screen Control Active Banner */}
+      {isScreenControlActive && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '5px 12px',
+            marginBottom: '8px',
+            borderRadius: '6px',
+            background: '#fffbeb',
+            border: '1px solid #fde68a',
+            color: '#92400e',
+            fontSize: '12px',
+            fontWeight: 500,
+          }}
+        >
+          <span
+            style={{
+              width: '7px',
+              height: '7px',
+              borderRadius: '50%',
+              background: '#f59e0b',
+            }}
+          />
+          <span style={{ fontWeight: 600 }}>Playwright & Screen Overlay Active:</span>
+          <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {agentLifecycle?.message || 'Controlling screen on Amazon...'}
+          </span>
+          <span style={{ fontSize: '11px', color: '#b45309' }}>Esc / Stop</span>
+        </div>
+      )}
+
       <input
         ref={fileInputRef}
         type="file"
@@ -255,6 +315,73 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
           >
             <Mic size={13} strokeWidth={1.8} />
             <span>{isListening ? 'Stop' : 'Voice'}</span>
+          </button>
+
+          {/* Amazon Automation Trigger Button */}
+          <button
+            type="button"
+            onClick={handleAmazonClick}
+            disabled={disabled || isStreaming}
+            aria-label="Automate Amazon Shopping with Playwright & Screen Overlay"
+            title="Automate Amazon Shopping (MCP + Playwright + Screen Overlay)"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '5px 9px',
+              borderRadius: '6px',
+              background: '#fffbeb',
+              border: '1px solid #fde68a',
+              color: '#92400e',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: disabled || isStreaming ? 'not-allowed' : 'pointer',
+              opacity: disabled || isStreaming ? 0.4 : 1,
+              transition: 'all 0.15s ease',
+            }}
+            onMouseEnter={(e) => {
+              if (!disabled && !isStreaming) {
+                e.currentTarget.style.background = '#fef3c7';
+                e.currentTarget.style.borderColor = '#f59e0b';
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = '#fffbeb';
+              e.currentTarget.style.borderColor = '#fde68a';
+            }}
+          >
+            <ShoppingBag size={13} strokeWidth={2} />
+            <span>Amazon</span>
+          </button>
+
+          {/* External App Builder Provider Toggle */}
+          <button
+            type="button"
+            onClick={() => {
+              const next = appBuilderProvider === 'auto' ? 'manus' : appBuilderProvider === 'manus' ? 'replit' : 'auto';
+              setAppBuilderProvider(next);
+            }}
+            disabled={disabled || isStreaming}
+            aria-label={`Builder provider: ${appBuilderProvider} (click to toggle)`}
+            title={`External App Builder: ${appBuilderProvider.toUpperCase()} (Click to toggle: Auto -> Manus -> Replit)`}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '5px 9px',
+              borderRadius: '6px',
+              background: appBuilderProvider === 'auto' ? '#f3f4f6' : appBuilderProvider === 'manus' ? '#ecfdf5' : '#eff6ff',
+              border: `1px solid ${appBuilderProvider === 'auto' ? '#e5e7eb' : appBuilderProvider === 'manus' ? '#a7f3d0' : '#bfdbfe'}`,
+              color: appBuilderProvider === 'auto' ? '#4b5563' : appBuilderProvider === 'manus' ? '#047857' : '#1d4ed8',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: disabled || isStreaming ? 'not-allowed' : 'pointer',
+              opacity: disabled || isStreaming ? 0.4 : 1,
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <Code2 size={13} strokeWidth={2} />
+            <span>Builder: {appBuilderProvider === 'auto' ? 'Auto' : appBuilderProvider === 'manus' ? 'Manus' : 'Replit'}</span>
           </button>
 
           {/* Simple Black Send or Stop Button */}

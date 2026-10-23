@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, Calendar, Search } from 'lucide-react';
+import { FileText, Calendar, Search, ShoppingBag, Rocket } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 interface SuggestionChipsProps {
@@ -14,6 +14,16 @@ interface ProductSuggestion {
 }
 
 const PRODUCT_SUGGESTIONS: ProductSuggestion[] = [
+  {
+    id: 'food-delivery-app',
+    label: '🚀 Create a responsive food delivery app with customer authentication, restaurant listings, search, cart, checkout, order tracking, and an admin dashboard.',
+    icon: Rocket,
+  },
+  {
+    id: 'amazon-creatine',
+    label: '🛒 Buy creatine under ₹500 on Amazon (Playwright + Overlay)',
+    icon: ShoppingBag,
+  },
   {
     id: 'meeting',
     label: 'Summarize my last meeting',

@@ -17,6 +17,7 @@ import { type AgentLifecycleStatus, LIFECYCLE_MESSAGES } from '../agent/types.js
 import { orchestrator } from '../agent/orchestrator/orchestrator.js';
 import { isComplexPrompt } from '../agent/orchestrator/planner.js';
 import { taskStore } from '../agent/orchestrator/taskStore.js';
+import { appBuilderService } from '../services/appBuilder/index.js';
 
 export const chatRouter = Router();
 chatRouter.use(authMiddleware);
@@ -249,6 +250,262 @@ chatRouter.post('/', async (req: AuthenticatedRequest, res: Response) => {
     assistantMsgId = assistantMsg.id;
     activeStreamControllers.set(assistantMsgId, abortController);
 
+    req.on('close', async () => {
+      if (!isAborted) {
+        isAborted = true;
+        abortController.abort();
+        if (assistantMsgId) activeStreamControllers.delete(assistantMsgId);
+        if (convId) activeStreamControllers.delete(convId);
+        emitLifecycle?.('stopped', 'Automation stopped by user.');
+        if (assistantMsgId) {
+          try {
+            await db
+              .update(messages)
+              .set({ status: 'stopped' })
+              .where(eq(messages.id, assistantMsgId));
+          } catch (e) {
+            // ignore
+          }
+        }
+      }
+    });
+
+    // Direct Intent Match: Amazon Shopping, Playwright Automation & Screen Control Overlay
+    const isAmazonIntent =
+      (/\b(amazon|playwright|shop_amazon)\b/i.test(promptText) &&
+        /\b(buy|shop|cart|creatine|purchase|product|order|overlay|connect|mcp|automate|find|search)\b/i.test(promptText)) ||
+      /\b(buy\s+on\s+amazon|shop\s+on\s+amazon|add\s+to\s+cart|amazon\s+creatine)\b/i.test(promptText) ||
+      /connect\s+mcp.*playwright.*overlay.*amazon/i.test(promptText);
+
+    if (isAmazonIntent && !isAborted) {
+      emitLifecycle?.('controlling_screen', 'Connecting MCP, Playwright browser, and Amazon overlay...', 'shop_amazon');
+
+      // Extract budget
+      const budgetMatch = promptText.match(/(?:under|below|budget\s+(?:of)?|max(?:\s+price)?)\s*(?:₹|rs\.?|inr)?\s*([\d,]+)/i);
+      const budget = budgetMatch && budgetMatch[1] ? parseInt(budgetMatch[1].replace(/,/g, ''), 10) : 500;
+
+      // Extract search query
+      let query = 'creatine monohydrate';
+      const cleanCandidates = promptText
+        .replace(/connect\s+mcp.*playwright.*overlay.*amazon.*promptbar/i, '')
+        .replace(/connect\s+mcp.*promptbar/i, '')
+        .replace(/^(?:please\s+)?(?:can\s+you\s+)?(?:buy|shop|find|search|automate|order|get)\s+(?:for\s+)?/i, '')
+        .replace(/(?:on\s+amazon|from\s+amazon|in\s+amazon|via\s+playwright|with\s+overlay|and\s+add\s+to\s+cart)/gi, '')
+        .replace(/(?:under|below|budget\s+(?:of)?|max(?:\s+price)?)\s*(?:₹|rs\.?|inr)?\s*[\d,]+/gi, '')
+        .trim();
+
+      if (cleanCandidates && cleanCandidates.length > 2 && !cleanCandidates.toLowerCase().includes('connect') && !cleanCandidates.toLowerCase().includes('mcp')) {
+        query = cleanCandidates;
+      }
+
+      const tcId = `call-amazon-${Date.now()}`;
+      sendEvent({
+        type: 'tool_call',
+        id: tcId,
+        name: 'shop_amazon',
+        args: { query, maxPriceINR: budget },
+      });
+
+      try {
+        const result = await mcpManager.executeTool(
+          'shop_amazon',
+          { query, maxPriceINR: budget, requirements: 'Best rated, authentic seller, verified price within budget' },
+          {
+            signal: abortController.signal,
+            onProgress: (p) => {
+              const status = p.status === 'checkout_review' || p.status === 'waiting_for_user' ? 'waiting_for_user' : 'controlling_screen';
+              emitLifecycle?.(status, p.message, 'shop_amazon', p.data as Record<string, unknown>);
+              sendEvent({
+                type: 'progress',
+                sessionId: convId,
+                status: p.status,
+                message: p.message,
+                data: p.data,
+                timestamp: new Date().toISOString(),
+              });
+            },
+          }
+        );
+
+        sendEvent({
+          type: 'tool_result',
+          id: tcId,
+          name: 'shop_amazon',
+          result: result.result,
+          ms: result.durationMs,
+        });
+
+        if (isAborted) {
+          emitLifecycle?.('stopped', 'Automation stopped by user.');
+          res.end();
+          return;
+        }
+
+        let summaryText = '';
+        const data = result.data as any;
+        if (result.success && data?.selectedProduct) {
+          summaryText = `I connected the **Karma MCP server**, launched **Playwright Chromium browser automation**, and initialized the **desktop Screen Control Overlay** for Amazon.in.\n\n` +
+            `### 🛒 Amazon Shopping Automation Result\n` +
+            `- **Search Query:** "${query}"\n` +
+            `- **Budget Ceiling:** ₹${budget}\n` +
+            `- **Selected Product:** [${data.selectedProduct.title}](${data.selectedProduct.url})\n` +
+            `- **Live Verified Price:** ${data.selectedProduct.price} *(Within ₹${budget} budget)*\n` +
+            `- **Rating:** ${data.selectedProduct.rating || 'Verified'} | **Reviews:** ${data.selectedProduct.reviews || 'Popular'}\n` +
+            `- **Action Taken:** Added to Cart & Navigated to Checkout Review\n` +
+            `- **Cart Link:** [Open Amazon Cart](https://www.amazon.in/gp/cart/view.html)\n\n` +
+            `> 🛡️ **Purchase Safeguard Notice:**\n` +
+            `> Karma safely performed search, candidate comparison, and cart addition up to checkout review. For security, Karma will never automatically submit payment. You can review and place the order manually in your browser.`;
+        } else if (result.error) {
+          summaryText = `### ⚠️ Amazon Shopping Workflow Notice\n\n${result.result}`;
+        } else {
+          summaryText = `### 🛒 Amazon Automation Completed\n\n${result.result}`;
+        }
+
+        // Stream synthesized summary
+        const chunkSize = 20;
+        for (let i = 0; i < summaryText.length; i += chunkSize) {
+          if (isAborted) break;
+          sendEvent({ type: 'delta', text: summaryText.slice(i, i + chunkSize) });
+          await new Promise((r) => setTimeout(r, 12));
+        }
+
+        emitLifecycle?.('completed', 'Amazon automation completed.');
+
+        if (!isAborted && assistantMsgId) {
+          await db
+            .update(messages)
+            .set({
+              content: summaryText,
+              parts: [{ type: 'text', text: summaryText }],
+              status: 'complete',
+            })
+            .where(eq(messages.id, assistantMsgId));
+
+          sendEvent({
+            type: 'done',
+            conversationId: convId,
+            messageId: assistantMsgId,
+          });
+
+          res.write('data: [DONE]\n\n');
+          res.end();
+          return;
+        }
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        sendEvent({ type: 'error', error: errorMsg });
+        res.write('data: [DONE]\n\n');
+        res.end();
+        return;
+      }
+    }
+
+    // Direct Intent Match: External AI App Builders (Manus / Replit)
+    const isAppBuildingIntent = appBuilderService.shouldHandlePrompt(promptText);
+
+    if (isAppBuildingIntent && !isAborted) {
+      emitLifecycle?.('planning', 'Classified as external app-building request. Selecting optimal builder...');
+
+      // Extract provider preference if user explicitly mentioned
+      let providerPreference: 'auto' | 'manus' | 'replit' = 'auto';
+      if (/\b(manus)\b/i.test(promptText)) providerPreference = 'manus';
+      if (/\b(replit)\b/i.test(promptText)) providerPreference = 'replit';
+
+      const tcId = `call-appbuilder-${Date.now()}`;
+      sendEvent({
+        type: 'tool_call',
+        id: tcId,
+        name: 'build_external_app',
+        args: { prompt: promptText, provider: providerPreference },
+      });
+
+      try {
+        const build = await appBuilderService.buildApp(promptText, {
+          sessionId: convId || 'default-session',
+          userId,
+          providerOverride: providerPreference,
+          signal: abortController.signal,
+          onProgress: (p) => {
+            const domain = p.message.toLowerCase().includes('manus') ? 'manus.im' : 'replit.com';
+            const siteName = p.message.toLowerCase().includes('manus') ? 'Manus AI' : 'Replit Agent';
+            const actionUrl =
+              (p.data as any)?.previewUrl ||
+              (p.data as any)?.actionUrl ||
+              (p.data as any)?.taskUrl ||
+              (domain === 'manus.im' ? 'https://manus.im' : 'https://replit.com/new/react-vite-ts');
+
+            emitLifecycle?.('executing_tool', p.message, 'build_external_app', p.data as Record<string, unknown>);
+            sendEvent({
+              type: 'progress',
+              sessionId: convId,
+              status: p.status,
+              message: p.message,
+              data: {
+                ...(p.data && typeof p.data === 'object' ? p.data : {}),
+                domain,
+                url: actionUrl,
+                siteName,
+                agentRole: 'AI App Builder',
+              },
+              timestamp: new Date().toISOString(),
+            });
+          },
+        });
+
+        sendEvent({
+          type: 'tool_result',
+          id: tcId,
+          name: 'build_external_app',
+          result: build.result.outputSummary,
+        });
+
+        if (isAborted) {
+          emitLifecycle?.('stopped', 'App building cancelled by user.');
+          res.end();
+          return;
+        }
+
+        const summaryText = build.formattedChatResponse;
+
+        // Stream the formatted response in chunks
+        const chunkSize = 24;
+        for (let i = 0; i < summaryText.length; i += chunkSize) {
+          if (isAborted) break;
+          sendEvent({ type: 'delta', text: summaryText.slice(i, i + chunkSize) });
+          await new Promise((r) => setTimeout(r, 10));
+        }
+
+        emitLifecycle?.('completed', `${build.selectedProviderName} build brief and telemetry prepared.`);
+
+        if (!isAborted && assistantMsgId) {
+          await db
+            .update(messages)
+            .set({
+              content: summaryText,
+              parts: [{ type: 'text', text: summaryText }],
+              status: 'complete',
+            })
+            .where(eq(messages.id, assistantMsgId));
+
+          sendEvent({
+            type: 'done',
+            conversationId: convId,
+            messageId: assistantMsgId,
+          });
+
+          res.write('data: [DONE]\n\n');
+          res.end();
+          return;
+        }
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        sendEvent({ type: 'error', error: errorMsg });
+        res.write('data: [DONE]\n\n');
+        res.end();
+        return;
+      }
+    }
+
     // If no API key configured yet:
     if (!effectiveApiKey) {
       const isGreeting = /^(hi|hello|hey|greetings|good\s+(morning|afternoon|evening)|who\s+are\s+you|what\s+can\s+you\s+do)[\s!.?]*$/i.test(promptText.trim());
@@ -287,26 +544,6 @@ chatRouter.post('/', async (req: AuthenticatedRequest, res: Response) => {
       res.end();
       return;
     }
-
-    req.on('close', async () => {
-      if (!isAborted) {
-        isAborted = true;
-        abortController.abort();
-        if (assistantMsgId) activeStreamControllers.delete(assistantMsgId);
-        if (convId) activeStreamControllers.delete(convId);
-        emitLifecycle?.('stopped', 'Automation stopped by user.');
-        if (assistantMsgId) {
-          try {
-            await db
-              .update(messages)
-              .set({ status: 'stopped' })
-              .where(eq(messages.id, assistantMsgId));
-          } catch (e) {
-            // ignore
-          }
-        }
-      }
-    });
 
     // 6. Build History & Persona Context
     const userRow = await db.query.users.findFirst({ where: eq(users.id, userId) });
