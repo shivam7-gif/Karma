@@ -22,10 +22,15 @@ const Landing: React.FC = () => {
   const navigate = useNavigate();
   const [modelLoaded, setModelLoaded] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const videoSectionRef = React.useRef<HTMLElement>(null);
 
   const handleClick = () => {
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
+  };
+
+  const scrollToVideo = () => {
+    videoSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -75,33 +80,63 @@ const Landing: React.FC = () => {
         </div>
       )}
 
-      {/* Floating 3D Model Hero Section in Foreground */}
-      <div
-        style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 'min(480px, 90vw)',
-          height: 'min(480px, 90vh)',
-          zIndex: 10,
-          cursor: 'pointer',
-          pointerEvents: 'auto',
-        }}
-      >
-        <div
-          style={{
-            width: '100%',
-            height: '100%',
-            opacity: modelLoaded ? 1 : 0,
-            transition: 'opacity 0.8s ease',
-          }}
+      {/* Main Scrollable Landing Container */}
+      <div className="relative z-10 w-full min-h-screen">
+        {/* Hero Section 1: 3D Alexa Model */}
+        <section className="min-h-screen w-full flex items-center justify-center relative pointer-events-auto">
+          <div
+            style={{
+              width: 'min(480px, 90vw)',
+              height: 'min(480px, 90vh)',
+              cursor: 'pointer',
+              pointerEvents: 'auto',
+            }}
+          >
+            <div
+              style={{
+                width: '100%',
+                height: '100%',
+                opacity: modelLoaded ? 1 : 0,
+                transition: 'opacity 0.8s ease',
+              }}
+            >
+              <AlexaViewer
+                onLoad={() => setModelLoaded(true)}
+                onClick={handleClick}
+              />
+            </div>
+          </div>
+
+          {/* Smooth Scroll Cue to the Video Hero Section below */}
+          <div
+            onClick={scrollToVideo}
+            className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 cursor-pointer text-neutral-400 hover:text-neutral-700 transition-colors z-20"
+            title="Scroll to view video"
+          >
+            <span className="text-[11px] font-medium tracking-widest uppercase text-neutral-400">Scroll Down</span>
+            <svg className="w-5 h-5 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+          </div>
+        </section>
+
+        {/* Hero Section 2: Video Section directly below 3D Model */}
+        <section
+          ref={videoSectionRef}
+          className="min-h-screen w-full flex items-center justify-center px-4 sm:px-8 py-20 relative pointer-events-auto"
         >
-          <AlexaViewer
-            onLoad={() => setModelLoaded(true)}
-            onClick={handleClick}
-          />
-        </div>
+          <div className="w-full max-w-5xl rounded-3xl overflow-hidden shadow-2xl border border-neutral-200/80 bg-black/90 backdrop-blur-md">
+            <video
+              src="/alexa/video_1.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+              controls
+              className="w-full h-auto object-cover rounded-3xl"
+            />
+          </div>
+        </section>
       </div>
 
       {/* Sign Up button */}

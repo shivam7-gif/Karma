@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, Calendar, Search, ShoppingBag, Rocket } from 'lucide-react';
+import { FileText, Calendar, ShoppingBag, Layers } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 interface SuggestionChipsProps {
@@ -7,37 +7,42 @@ interface SuggestionChipsProps {
   style?: React.CSSProperties;
 }
 
-interface ProductSuggestion {
+interface SuggestionCard {
   id: string;
-  label: string;
+  title: string;
+  description: string;
+  prompt: string;
   icon: LucideIcon;
 }
 
-const PRODUCT_SUGGESTIONS: ProductSuggestion[] = [
+const SUGGESTIONS: SuggestionCard[] = [
   {
     id: 'food-delivery-app',
-    label: '🚀 Create a responsive food delivery app with customer authentication, restaurant listings, search, cart, checkout, order tracking, and an admin dashboard.',
-    icon: Rocket,
+    title: 'Build a food delivery app',
+    description: 'Customer auth, restaurant listings, cart, tracking & admin',
+    prompt: 'Create a responsive food delivery app with customer authentication, restaurant listings, search, cart, checkout, order tracking, and an admin dashboard.',
+    icon: Layers,
   },
   {
-    id: 'amazon-creatine',
-    label: '🛒 Buy creatine under ₹500 on Amazon (Playwright + Overlay)',
+    id: 'amazon-shopping',
+    title: 'Amazon shopping automation',
+    description: 'Price-check products, verify ratings, and automate cart checkout',
+    prompt: 'Find the best creatine monohydrate under ₹500 on Amazon and add to cart with live overlay',
     icon: ShoppingBag,
   },
   {
-    id: 'meeting',
-    label: 'Summarize my last meeting',
+    id: 'summarize-meeting',
+    title: 'Summarize last meeting',
+    description: 'Extract action items, core decisions, and shared notes from sync',
+    prompt: 'Summarize my last meeting',
     icon: FileText,
   },
   {
-    id: 'calendar',
-    label: "What's on my calendar tomorrow?",
+    id: 'calendar-overview',
+    title: 'Calendar overview',
+    description: "Review schedule, upcoming commitments, and priorities tomorrow",
+    prompt: "What's on my calendar tomorrow?",
     icon: Calendar,
-  },
-  {
-    id: 'document',
-    label: 'Find that document about…',
-    icon: Search,
   },
 ];
 
@@ -46,55 +51,103 @@ export const SuggestionChips: React.FC<SuggestionChipsProps> = ({ onSelectPrompt
     <div
       role="region"
       aria-label="Starter suggestions"
+      className="suggestions-grid"
       style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '8px',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+        gap: '12px',
+        width: '100%',
+        maxWidth: '720px',
         marginTop: '16px',
         ...style,
       }}
     >
-      {PRODUCT_SUGGESTIONS.map((item) => {
+      {SUGGESTIONS.map((item) => {
         const Icon = item.icon;
         return (
           <button
             key={item.id}
             type="button"
-            onClick={() => onSelectPrompt(item.label)}
+            onClick={() => onSelectPrompt(item.prompt)}
+            className="suggestion-card"
             style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '7px',
-              padding: '6px 14px',
-              borderRadius: 'var(--r-full, 9999px)',
-              background: '#ffffff',
-              border: '1px solid var(--border-glass, #e7e2d8)',
-              color: 'var(--text-secondary, #575260)',
-              fontSize: '13px',
-              fontWeight: 500,
-              fontFamily: 'var(--font-sans)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-start',
+              textAlign: 'left',
+              padding: '14px 16px',
+              borderRadius: '12px',
+              background: '#FFFFFF',
+              border: '1px solid #E8E3DC',
               cursor: 'pointer',
-              boxShadow: 'var(--shadow-soft, 0 1px 3px rgba(0, 0, 0, 0.03))',
-              transition: 'all var(--transition-hover, 120ms ease)',
+              boxShadow: 'none',
+              transition: 'transform 150ms ease-out, border-color 150ms ease-out, background-color 150ms ease-out',
+              width: '100%',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = 'var(--text-primary, #19161d)';
-              e.currentTarget.style.borderColor = 'var(--accent, #8b3dff)';
-              e.currentTarget.style.background = 'var(--accent-soft, rgba(139, 61, 255, 0.05))';
+              e.currentTarget.style.borderColor = '#C9C3B8';
+              e.currentTarget.style.backgroundColor = '#FFFFFF';
+              e.currentTarget.style.transform = 'translateY(-1px)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.color = 'var(--text-secondary, #575260)';
-              e.currentTarget.style.borderColor = 'var(--border-glass, #e7e2d8)';
-              e.currentTarget.style.background = '#ffffff';
+              e.currentTarget.style.borderColor = '#E8E3DC';
+              e.currentTarget.style.backgroundColor = '#FFFFFF';
+              e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
-            <Icon size={13} strokeWidth={1.8} style={{ color: 'var(--accent, #8b3dff)' }} />
-            <span>{item.label}</span>
+            {/* Top-left line icon in muted gray */}
+            <div
+              style={{
+                color: '#8E8798',
+                marginBottom: '8px',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+              aria-hidden="true"
+            >
+              <Icon size={16} strokeWidth={1.5} />
+            </div>
+
+            {/* Short Title */}
+            <span
+              style={{
+                fontSize: '14px',
+                fontWeight: 500,
+                color: '#19161D',
+                fontFamily: 'inherit',
+                lineHeight: 1.35,
+                marginBottom: '3px',
+              }}
+            >
+              {item.title}
+            </span>
+
+            {/* Muted one-line description */}
+            <span
+              style={{
+                fontSize: '12px',
+                color: '#8E8798',
+                fontFamily: 'inherit',
+                lineHeight: 1.4,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                width: '100%',
+              }}
+            >
+              {item.description}
+            </span>
           </button>
         );
       })}
+
+      <style>{`
+        @media (max-width: 640px) {
+          .suggestions-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };

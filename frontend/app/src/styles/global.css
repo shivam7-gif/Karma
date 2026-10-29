@@ -9,9 +9,10 @@
 
 html, body {
   width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background-color: #ffffff;
+  min-height: 100%;
+  overflow-x: hidden;
+  background-color: #FAF8F5;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.035'/%3E%3C/svg%3E");
   color: var(--text-primary);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -19,12 +20,13 @@ html, body {
 }
 
 #root {
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  min-height: 100vh;
   position: relative;
   padding: 0;
-  background-color: #ffffff;
-  overflow: hidden;
+  background-color: transparent;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 @media (max-width: 640px) {
@@ -36,9 +38,10 @@ html, body {
 /* Accessibility Focus Ring */
 button:focus-visible,
 input:focus-visible,
+textarea:focus-visible,
 a:focus-visible,
 [tabindex]:focus-visible {
-  outline: 2px solid var(--accent-blue);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 

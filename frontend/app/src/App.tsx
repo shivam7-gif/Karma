@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Route, Routes, useNavigate, useLocation } from 'react-router-dom';
-import { AppShell } from './components/AppShell';
+import Dashboard from './pages/Dashboard';
 import Landing from './pages/Landingpage';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -97,8 +97,8 @@ export const App: React.FC = () => {
       <Route path="/index.html" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
-      <Route path="/dashboard" element={<AppShell />} />
-      <Route path="/ide" element={<AppShell />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/ide" element={<Dashboard />} />
       <Route path="*" element={<Landing />} />
     </Routes>
   );

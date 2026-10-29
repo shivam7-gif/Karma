@@ -1,53 +1,66 @@
 :root {
-  /* Warm off-white page canvas & aurora magenta/violet accent */
-  --bg-app: #faf8f5;
-  --bg-page: #faf8f5;
-  --bg-card: #ffffff;
-  
-  --accent: #8b3dff;
-  --accent-soft: rgba(139, 61, 255, 0.08);
-  --accent-subtle: rgba(139, 61, 255, 0.14);
-  --accent-hover: #752fe6;
+  /* Warm off-white canvas and neutral warm gray tones */
+  --bg-app: #FAF8F5;
+  --bg-page: #FAF8F5;
+  --bg-card: #FFFFFF;
+  --bg-chip: #F5F2EE;
+  --bg-track: #F0ECE6;
 
-  --surface-glass: rgba(255, 255, 255, 0.92);
-  --surface-glass-hover: #f5f2ec;
-  --surface-glass-active: #ebe6dc;
+  /* Single purple accent used ONLY for active states, send button, focus rings */
+  --accent: #7C3AED;
+  --accent-soft: #F3EBFF;
+  --accent-ring: rgba(124, 58, 237, 0.12);
+  --accent-hover: #6D28D9;
 
-  --border-glass: #e7e2d8;
-  --border-glass-light: #ded8cd;
-  --border-focus: #8b3dff;
+  /* Amber status indicator (for active Amazon overlay) */
+  --status-amber: #F59E0B;
 
-  --text-primary: #19161d;
+  /* Borders */
+  --border-subtle: #E8E3DC;
+  --border-hover: #D8D2C7;
+  --border-glass: #E8E3DC;
+  --border-glass-light: #E8E3DC;
+
+  /* Typography Colors */
+  --text-primary: #19161D;
   --text-secondary: #575260;
-  --text-muted: #8e8798;
-  --text-accent: #8b3dff;
-  --text-accent-hover: #752fe6;
-
-  --status-success: #10b981;
-  --status-warning: #f59e0b;
-  --status-error: #ef4444;
+  --text-muted: #8E8798;
+  --text-accent: #7C3AED;
 
   /* Typography */
   --font-display: 'Instrument Serif', Georgia, serif;
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  /* Radius hierarchy */
-  --r-sm: 10px;       /* small buttons */
-  --r-md: 14px;       /* cards / inner panels */
-  --r-lg: 16px;       /* input bar / modal cards */
-  --r-full: 9999px;   /* small tags and chips only */
+  /* Radius hierarchy: 8px / 12px / 16px / 20px / 9999px */
+  --r-sm: 8px;        /* small buttons & badges */
+  --r-md: 12px;       /* cards / rails / inner panels */
+  --r-lg: 16px;       /* command input card */
+  --r-xl: 20px;       /* large modals */
+  --r-full: 9999px;   /* chips, pills, circular avatars */
 
-  /* Purposeful micro-transitions */
-  --transition-hover: 120ms cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-normal: 180ms cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-modal: 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  /* Spacing Scale (4/8px consistent rhythm) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
 
-  /* Clean subtle shadows */
-  --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.04);
-  --shadow-card: 0 4px 20px rgba(25, 22, 29, 0.05);
-  --shadow-panel: -4px 0 28px rgba(25, 22, 29, 0.07);
-  --shadow-input: 0 4px 20px rgba(139, 61, 255, 0.05), 0 1px 3px rgba(0, 0, 0, 0.04);
+  /* Motion: 150-250ms ease-out */
+  --transition-fast: 150ms ease-out;
+  --transition-normal: 200ms ease-out;
+  --transition-slow: 250ms ease-out;
+  --transition-hover: 150ms ease-out;
+
+  /* Layered soft shadows */
+  --shadow-input: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px -8px rgba(0, 0, 0, 0.08);
+  --shadow-input-focus: 0 0 0 3px rgba(124, 58, 237, 0.12), 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px -8px rgba(0, 0, 0, 0.08);
+  --shadow-pill: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-rail: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-card: none;
+  --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 
 @keyframes messageFadeUp {

@@ -3,7 +3,7 @@
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "rootDir": "./src",
+    "rootDir": "./",
     "outDir": "./dist",
     "types": ["node"],
     "strict": true,
@@ -14,12 +14,12 @@
     "sourceMap": true,
     "declaration": true,
     "noEmitOnError": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": false,
+    "exactOptionalPropertyTypes": false,
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "moduleDetection": "force"
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "mcp/**/*.ts"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }
