@@ -10,7 +10,7 @@ const dataDir = path.resolve(process.env.DATA_DIR ?? "./data");
 const uploadsDir = path.join(dataDir, "uploads");
 
 export const config = {
-    port: Number(process.env.MCP_PORT ?? 3000),
+    port: Number(process.env.MCP_PORT ?? process.env.PORT ?? 3001),
     dataDir,
     uploadsDir,
     uploadDir: uploadsDir,

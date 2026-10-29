@@ -24,6 +24,7 @@ export async function sendMessage(
         'Content-Type': 'application/json',
         'Accept': 'text/event-stream',
         'x-user-id': userId,
+        Authorization: `Bearer ${userId}`,
       },
       body: JSON.stringify({
         message: text,

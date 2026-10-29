@@ -56,7 +56,7 @@ export class MultiMcpManager {
 
   constructor(serverConfigs?: McpServerConfig[]) {
     // 1. Always register default Karma MCP server
-    const defaultUrl = process.env.MCP_URL || mcpConfig.endpoint || 'http://localhost:3000/mcp';
+    const defaultUrl = process.env.MCP_URL || mcpConfig.endpoint || 'http://localhost:3001/mcp';
     this.registerServer({
       id: 'karma',
       name: 'Karma MCP Server',
@@ -670,7 +670,9 @@ export class MultiMcpManager {
       };
     }
 
-    const timeoutMs = options?.timeoutMs || 25000;
+    const timeoutMs =
+      options?.timeoutMs ||
+      (toolName === 'code_open_repository' ? 130_000 : toolName === 'shop_amazon' ? 90_000 : 25_000);
 
     try {
       const callPromise = client.callTool({
@@ -768,7 +770,11 @@ export class MultiMcpManager {
       );
     }
     if (name === 'code_open_repository') {
-      return await codeToolHandlers.openRepository(args.url as string);
+      const repositoryUrl = (args.repositoryUrl as string) || (args.url as string);
+      if (!repositoryUrl) {
+        throw new Error('repositoryUrl is required');
+      }
+      return await codeToolHandlers.openRepository(repositoryUrl);
     }
     if (name === 'code_list_files') {
       return await codeToolHandlers.listFiles(args.repoId as string, (args.path as string) || '');

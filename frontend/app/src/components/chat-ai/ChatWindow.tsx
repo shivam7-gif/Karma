@@ -14,6 +14,7 @@ import MessageBubble, { type ChatMessage } from './MessageBubble';
 import ChatInput from './ChatInput';
 import VoicePanel from './VoicePanel';
 import { useSpeech } from '../../hooks/useSpeech';
+import { CONFIG } from '../../config';
 
 interface ChatWindowProps {
   initialPrompt?: string;
@@ -108,9 +109,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
       let accumulatedText = '';
 
-      // Determine backend endpoint
-      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const apiEndpoint = isLocal ? 'http://localhost:3000/api/chat' : '/api/chat';
+      const apiEndpoint = CONFIG.apiEndpoint || '/api/chat';
 
       try {
         const response = await fetch(apiEndpoint, {

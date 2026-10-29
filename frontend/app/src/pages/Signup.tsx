@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { KineticTextReveal } from '@/components/ui/kinetic-text-reveal';
-import { CONFIG } from '../config';
+import { CONFIG, getApiBase } from '../config';
 import { useAppStore } from '../store/appStore';
 import pic1 from '../assets/auth/pic_1.jpg';
 
@@ -53,8 +53,7 @@ const Signup: React.FC = () => {
     const githubCode = searchParams.get('code');
     if (githubCode) {
       setIsLoading(true);
-      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const apiBase = isLocal ? 'http://localhost:3000' : CONFIG.apiEndpoint.replace(/\/api\/chat$/, '');
+      const apiBase = getApiBase();
 
       fetch(`${apiBase}/api/auth/github`, {
         method: 'POST',

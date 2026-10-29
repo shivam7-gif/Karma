@@ -30,11 +30,13 @@ const app = express();
 
 app.use(
   cors({
-    origin: '*',
+    origin: process.env.NODE_ENV === 'production'
+      ? [process.env.FRONTEND_URL, 'http://localhost:5173'].filter(Boolean) as string[]
+      : true,
     credentials: true,
   })
 );
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 
 /* -------------------------------------------------------------------------- */
 /* Tool Registrations Helper                                                  */
@@ -208,38 +210,37 @@ export function createMcpServer(): McpServer {
           }
         }
       } catch (err) {
-        console.warn('Real RAG retrieval fallback due to error:', err);
+        const message = err instanceof Error ? err.message : String(err);
+        return {
+          isError: true,
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                status: 'error',
+                query: subject,
+                error: `Knowledge retrieval failed: ${message}`,
+              }),
+            },
+          ],
+        };
       }
 
-      // Fallback response if store is empty or offline
+      const reason = config.neo4j.uri && config.neo4j.password
+        ? 'No matching passages were found in the knowledge base. Ingest a document first.'
+        : 'Neo4j is not configured. Set NEO4J_URI, NEO4J_USER, and NEO4J_PASSWORD to enable RAG retrieval.';
+
       return {
         content: [
           {
             type: 'text',
-            text: JSON.stringify(
-              {
-                status: 'ok',
-                query: subject,
-                depth: depth || 'detailed',
-                passages: [
-                  {
-                    source: 'q3_operations_review.pdf',
-                    page: 4,
-                    paragraph: 2,
-                    score: 0.94,
-                    snippet: 'Agreed budget ceiling for Q3 operations was capped with a 15% reserve allocation.',
-                  },
-                  {
-                    source: 'specs/voice-engine-v2.md',
-                    section: 'Latency Targets',
-                    score: 0.89,
-                    snippet: 'Target time-to-first-token is under 350ms with local voice streaming fallback.',
-                  },
-                ],
-              },
-              null,
-              2
-            ),
+            text: JSON.stringify({
+              status: 'empty',
+              query: subject,
+              depth: depth || 'detailed',
+              passages: [],
+              message: reason,
+            }),
           },
         ],
       };
@@ -639,6 +640,7 @@ app.get('/mcp', async (req: Request, res: Response) => {
       'code_git_status',
       'code_git_diff',
       'code_propose_edit',
+      'code_apply_proposal',
     ],
   });
 });

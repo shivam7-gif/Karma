@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import crypto from 'node:crypto';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
@@ -30,9 +31,14 @@ export class WorkspaceService {
   private currentRoot: string;
 
   constructor(initialRoot?: string) {
-    this.currentRoot = initialRoot ? path.resolve(initialRoot) : path.resolve(process.cwd(), '..');
+    const fromEnv = process.env.KARMA_IDE_WORKSPACE_ROOT || process.env.KARMA_CODE_WORKSPACE_ROOT;
+    const productionDefault = path.join(os.tmpdir(), 'karma-ide-workspace');
+    const developmentDefault = path.resolve(process.cwd(), '..');
+    this.currentRoot = path.resolve(
+      initialRoot || fromEnv || (process.env.NODE_ENV === 'production' ? productionDefault : developmentDefault)
+    );
     if (!fs.existsSync(this.currentRoot)) {
-      this.currentRoot = process.cwd();
+      fs.mkdirSync(this.currentRoot, { recursive: true });
     }
   }
 
@@ -41,6 +47,10 @@ export class WorkspaceService {
   }
 
   setRoot(newRoot: string): boolean {
+    if (process.env.NODE_ENV === 'production') {
+      logger.warn({ newRoot }, 'Rejected workspace root change in production');
+      return false;
+    }
     const resolved = path.resolve(newRoot);
     if (fs.existsSync(resolved) && fs.statSync(resolved).isDirectory()) {
       this.currentRoot = resolved;
@@ -52,12 +62,13 @@ export class WorkspaceService {
 
   isPathSafe(targetPath: string): boolean {
     const resolved = path.resolve(this.currentRoot, targetPath);
-    return resolved.startsWith(this.currentRoot);
+    const relative = path.relative(this.currentRoot, resolved);
+    return relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
   }
 
   getSafeFullPath(userPath: string): string {
     const resolved = path.resolve(this.currentRoot, userPath);
-    if (!resolved.startsWith(this.currentRoot)) {
+    if (!this.isPathSafe(userPath)) {
       throw new Error(`Access Denied: Path escapes workspace root: ${userPath}`);
     }
     return resolved;

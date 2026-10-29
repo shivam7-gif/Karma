@@ -7,6 +7,7 @@ import {
     writeFile,
     lstat,
     realpath,
+    rm,
 } from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
@@ -21,8 +22,9 @@ export const WORKSPACE_ROOT = path.resolve(
     path.join(os.tmpdir(), "karma-code-workspaces")
 );
 
-const MAX_FILES = 3000;
-const MAX_FILE_BYTES = 200 * 1024;
+const MAX_FILES = Number(process.env.KARMA_CODE_MAX_FILES) || 3000;
+const MAX_FILE_BYTES = Number(process.env.KARMA_CODE_MAX_FILE_BYTES) || 200 * 1024;
+const WORKSPACE_TTL_MS = Number(process.env.KARMA_CODE_WORKSPACE_TTL_MS) || 6 * 60 * 60 * 1000;
 
 const IGNORED_DIRS = new Set([
     ".git",
@@ -52,6 +54,29 @@ export type EditProposal = {
 
 export const repositories = new Map<string, Repository>();
 export const proposals = new Map<string, EditProposal>();
+
+export async function cleanupStaleWorkspaces(): Promise<void> {
+    try {
+        await mkdir(WORKSPACE_ROOT, { recursive: true });
+        const entries = await readdir(WORKSPACE_ROOT, { withFileTypes: true });
+        const now = Date.now();
+
+        for (const entry of entries) {
+            if (!entry.isDirectory()) continue;
+            const dir = path.join(WORKSPACE_ROOT, entry.name);
+            const stat = await lstat(dir);
+            if (now - stat.mtimeMs <= WORKSPACE_TTL_MS) continue;
+            await rm(dir, { recursive: true, force: true });
+            repositories.delete(entry.name);
+        }
+    } catch {
+        // Workspace root may not exist yet.
+    }
+}
+
+setInterval(() => {
+    void cleanupStaleWorkspaces();
+}, 30 * 60 * 1000).unref();
 
 function textResult(text: string) {
     return {
@@ -224,6 +249,7 @@ export function makeDiff(
 export const codeToolHandlers = {
     async openRepository(repositoryUrl: string): Promise<string> {
         const parsed = parseGitHubUrl(repositoryUrl);
+        await cleanupStaleWorkspaces();
         await mkdir(WORKSPACE_ROOT, { recursive: true });
 
         const repoId = randomUUID();

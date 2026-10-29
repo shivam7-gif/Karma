@@ -1,8 +1,7 @@
-import { CONFIG } from '../config';
+import { getApiBase } from '../config';
 import type { WorkspaceFileNode, GitStatusFile } from '../types/ide';
 
-const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-const API_BASE = isLocal ? 'http://localhost:3000' : CONFIG.apiEndpoint.replace(/\/api\/chat$/, '');
+const API_BASE = getApiBase();
 const AUTH_HEADER = { 'Authorization': 'Bearer dev-user' };
 
 export const ideApi = {

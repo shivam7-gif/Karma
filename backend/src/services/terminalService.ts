@@ -26,6 +26,10 @@ export class TerminalService {
   }
 
   startProcess(rawCommand: string, options?: { cwd?: string; env?: Record<string, string> }): RunningProcess {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Integrated terminal execution is disabled in production.');
+    }
+
     const trimmed = rawCommand.trim();
     if (!this.isCommandAllowed(trimmed)) {
       throw new Error(`Security Policy: Execution of command '${trimmed.split(' ')[0]}' is not permitted in sandbox.`);

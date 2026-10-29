@@ -16,11 +16,14 @@ import { AppError } from "./lib/errors.js";
 import { logger } from "./lib/logger.js";
 
 const app = express();
-const PORT = Number(process.env.PORT) || 3000;
+const PORT = Number(process.env.PORT) || 3001;
+const HOST = process.env.HOST || "0.0.0.0";
 
 const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:5173',
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
   process.env.FRONTEND_URL,
 ].filter(Boolean) as string[];
 
@@ -28,36 +31,38 @@ app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
-      if (
-        allowedOrigins.includes(origin) ||
-        origin.endsWith('.onrender.com') ||
-        process.env.NODE_ENV !== 'production'
-      ) {
+      if (allowedOrigins.includes(origin) || origin.endsWith(".onrender.com")) {
         return callback(null, true);
       }
-      return callback(null, true);
+      if (process.env.NODE_ENV !== "production") {
+        return callback(null, true);
+      }
+      return callback(null, false);
     },
     credentials: true,
   })
 );
-app.use(express.json());
-
-// Routes
-app.use("/api/settings", settingsRouter);
-app.use("/api/chat", chatRouter);
-app.use("/api/approval", approvalRouter);
-app.use("/api/workspace", workspaceRouter);
-app.use("/api/terminal", terminalRouter);
-app.use("/api/vscode", vscodeRouter);
-app.use(mcpApp);
-
+app.use(express.json({ limit: "1mb" }));
 
 app.get("/health", async (_req, res) => {
   const dbHealth = await checkDbHealth();
-  const isHealthy = dbHealth.ok;
+  res.status(200).json({
+    status: dbHealth.ok ? "ok" : "degraded",
+    service: "karma-backend",
+    mcp: "/mcp",
+    database: {
+      status: dbHealth.ok ? "connected" : "disconnected",
+      latencyMs: dbHealth.latencyMs,
+      error: dbHealth.error,
+    },
+    timestamp: new Date().toISOString(),
+  });
+});
 
-  res.status(isHealthy ? 200 : 503).json({
-    status: isHealthy ? "ok" : "degraded",
+app.get("/ready", async (_req, res) => {
+  const dbHealth = await checkDbHealth();
+  res.status(dbHealth.ok ? 200 : 503).json({
+    status: dbHealth.ok ? "ready" : "not_ready",
     service: "karma-backend",
     database: {
       status: dbHealth.ok ? "connected" : "disconnected",
@@ -67,6 +72,14 @@ app.get("/health", async (_req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+app.use("/api/settings", settingsRouter);
+app.use("/api/chat", chatRouter);
+app.use("/api/approval", approvalRouter);
+app.use("/api/workspace", workspaceRouter);
+app.use("/api/terminal", terminalRouter);
+app.use("/api/vscode", vscodeRouter);
+app.use(mcpApp);
 
 /* -------------------------------------------------------------------------- */
 /* Authentication Endpoints (Google & GitHub OAuth)                           */
@@ -149,7 +162,7 @@ app.post("/api/auth/google", async (req, res) => {
           code,
           client_id: process.env.GOOGLE_CLIENT_ID || "",
           client_secret: process.env.GOOGLE_CLIENT_SECRET || "",
-          redirect_uri: redirectUri || `${process.env.FRONTEND_URL || "https://karma-1lkx.onrender.com"}/login`,
+          redirect_uri: redirectUri || `${process.env.FRONTEND_URL || "http://localhost:5173"}/login`,
           grant_type: "authorization_code",
         }),
       });
@@ -225,10 +238,18 @@ const distPath = fs.existsSync(frontendDist) ? frontendDist : fs.existsSync(altF
 if (distPath) {
   app.use(express.static(distPath));
   app.use((req: Request, res: Response, next: NextFunction) => {
-    if (req.method !== 'GET' || req.path.startsWith('/api') || req.path.startsWith('/health') || req.path.startsWith('/mcp')) {
+    if (
+      req.method !== "GET" ||
+      req.path.startsWith("/api") ||
+      req.path.startsWith("/health") ||
+      req.path.startsWith("/ready") ||
+      req.path.startsWith("/mcp") ||
+      req.path.startsWith("/sse") ||
+      req.path.startsWith("/messages")
+    ) {
       return next();
     }
-    res.sendFile(path.join(distPath, 'index.html'));
+    res.sendFile(path.join(distPath, "index.html"));
   });
 }
 
@@ -257,9 +278,11 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   });
 });
 
-const server = app.listen(PORT, () => {
-  logger.info(`Karma backend running at http://localhost:${PORT}`);
+const server = app.listen(PORT, HOST, () => {
+  logger.info({ port: PORT, host: HOST }, "Karma backend listening");
 });
+server.requestTimeout = 120_000;
+server.headersTimeout = 125_000;
 
 // Graceful Shutdown
 const shutdown = () => {

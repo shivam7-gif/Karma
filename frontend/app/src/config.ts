@@ -5,7 +5,16 @@ export const CONFIG = {
   userName: 'Shiva',
   userInitials: 'S',
   apiEndpoint: import.meta.env.VITE_API_ENDPOINT || '/api/chat',
-  useMock: import.meta.env.VITE_USE_MOCK === 'true', // real backend by default
-  googleClientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || '1061393811883-deqf9vd8itiq7p4uk2c6e8q5hci15d39.apps.googleusercontent.com',
-  githubClientId: import.meta.env.VITE_GITHUB_CLIENT_ID || 'Ov23liVWZlxSKjEY2RjI',
+  useMock: import.meta.env.VITE_USE_MOCK === 'true',
+  googleClientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
+  githubClientId: import.meta.env.VITE_GITHUB_CLIENT_ID || '',
 };
+
+/** Origin for REST calls. Empty string uses same-origin (Vite proxy in local dev). */
+export function getApiBase(): string {
+  const endpoint = CONFIG.apiEndpoint || '/api/chat';
+  if (/^https?:\/\//i.test(endpoint)) {
+    return endpoint.replace(/\/api\/chat\/?$/, '');
+  }
+  return '';
+}

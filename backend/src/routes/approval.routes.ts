@@ -1,8 +1,10 @@
 import { Router } from 'express';
 import type { Request, Response } from 'express';
 import { approvalService } from '../services/approval.service.js';
+import { authMiddleware } from '../lib/auth.js';
 
 export const approvalRouter = Router();
+approvalRouter.use(authMiddleware);
 
 // GET /api/approval/pending/:sessionId?
 approvalRouter.get('/pending', (req: Request, res: Response) => {

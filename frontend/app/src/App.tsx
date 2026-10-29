@@ -5,7 +5,7 @@ import Landing from './pages/Landingpage';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import { useAppStore } from './store/appStore';
-import { CONFIG } from './config';
+import { getApiBase } from './config';
 
 export const App: React.FC = () => {
   const navigate = useNavigate();
@@ -51,8 +51,7 @@ export const App: React.FC = () => {
     const searchParams = new URLSearchParams(window.location.search);
     const githubCode = searchParams.get('code');
     if (githubCode) {
-      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const apiBase = isLocal ? 'http://localhost:3000' : CONFIG.apiEndpoint.replace(/\/api\/chat$/, '');
+      const apiBase = getApiBase();
 
       fetch(`${apiBase}/api/auth/github`, {
         method: 'POST',
