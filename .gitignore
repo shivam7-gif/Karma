@@ -186,3 +186,18 @@ $RECYCLE.BIN/
 # Linux
 *~
 .directory
+
+
+# ------------------------------------------------------------------------------
+# Karma AI — Application-Specific Ignores
+# ------------------------------------------------------------------------------
+
+# Cloned GitHub repository workspaces (ephemeral, may be large)
+**/.karma-workspaces/
+.karma-workspaces/
+
+# Downloaded embedding model weights (auto-downloaded by @xenova/transformers)
+backend/data/models/
+
+# Playwright browser binaries (installed separately, not committed)
+backend/node_modules/.cache/playwright/

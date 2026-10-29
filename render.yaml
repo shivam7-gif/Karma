@@ -10,10 +10,10 @@ services:
       - path: /*
         name: X-Frame-Options
         value: SAMEORIGIN
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
     routes:
-      - type: rewrite
-        source: /api/*
-        destination: https://karma-api.onrender.com/api/*
       - type: rewrite
         source: /*
         destination: /index.html
@@ -21,9 +21,10 @@ services:
       - key: VITE_USE_MOCK
         value: "false"
       - key: VITE_API_ENDPOINT
-        value: /api/chat
+        # Update this to your deployed karma-api URL after first deploy
+        value: https://karma-api.onrender.com/api/chat
 
-  # Karma Backend API Service
+  # Karma Backend API Service (includes MCP server on same port)
   - type: web
     name: karma-api
     env: node
@@ -36,4 +37,14 @@ services:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 10000
+        value: "10000"
+      # Set these in the Render dashboard — do NOT commit secret values here:
+      # DATABASE_URL         (pooled Neon connection string)
+      # DATABASE_URL_UNPOOLED (direct Neon, needed for migrations)
+      # SECRETS_MASTER_KEY   (64-char hex, run: openssl rand -hex 32)
+      # GROQ_API_KEY         (starts with gsk_)
+      # GROQ_MODEL           (openai/gpt-oss-20b or openai/gpt-oss-120b)
+      # FRONTEND_URL         (https://karma-web.onrender.com)
+      # NEO4J_URI            (neo4j+s://...)
+      # NEO4J_USER           (your Aura instance ID)
+      # NEO4J_PASSWORD       (your Aura password)

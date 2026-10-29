@@ -28,9 +28,11 @@ export const config = {
 };
 
 export const mcpConfig = {
-    port: Number(process.env.MCP_PORT) || 3000,
+    // In production the MCP server shares the main API port.
+    // MCP_PORT overrides; fallback to PORT (Render injects this), then 3001.
+    port: Number(process.env.MCP_PORT) || Number(process.env.PORT) || 3001,
     host: process.env.MCP_HOST || '0.0.0.0',
-    endpoint: process.env.MCP_URL || 'http://localhost:3000/mcp',
+    endpoint: process.env.MCP_URL || `http://localhost:${Number(process.env.MCP_PORT) || Number(process.env.PORT) || 3001}/mcp`,
     name: 'karma-mcp-server',
     version: '1.0.0',
 };
