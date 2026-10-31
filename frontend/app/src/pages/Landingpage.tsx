@@ -1,8 +1,8 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import AlexaViewer from '../components/AlexaViewer';
-import loadingSvg from '../assets/loader/loading.svg';
-import DemoSection from '@/components/DemoSection';
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import AlexaViewer from "../components/AlexaViewer";
+import loadingSvg from "../assets/loader/loading.svg";
+import DemoSection from "@/components/DemoSection";
 
 /* ------------------------------------------------------------------ */
 /*  Karma landing: giant condensed type, one electric-blue ink,        */
@@ -13,23 +13,33 @@ import DemoSection from '@/components/DemoSection';
 /*  Type: Anton (display, uppercase) + Archivo (body)                  */
 /* ------------------------------------------------------------------ */
 
-type DemoState = 'idle' | 'listening' | 'thinking' | 'speaking';
-type IntroPhase = 'wait' | 'fly' | 'done';
+type DemoState = "idle" | "listening" | "thinking" | "speaking";
+type IntroPhase = "wait" | "fly" | "done";
 
 interface DemoStep {
   state: DemoState;
-  who: 'You' | 'Karma';
+  who: "You" | "Karma";
   text: string;
   ms: number;
 }
 
 const DEMO_SCRIPT: DemoStep[] = [
-  { state: 'listening', who: 'You', text: 'Book a table for four on Saturday at 8.', ms: 2400 },
-  { state: 'thinking', who: 'Karma', text: 'Checking places near you with a free table…', ms: 1600 },
   {
-    state: 'speaking',
-    who: 'Karma',
-    text: 'Done. Saffron has a table for four, Saturday at 8:00 pm. I added it to your calendar.',
+    state: "listening",
+    who: "You",
+    text: "Book a table for four on Saturday at 8.",
+    ms: 2400,
+  },
+  {
+    state: "thinking",
+    who: "Karma",
+    text: "Checking places near you with a free table…",
+    ms: 1600,
+  },
+  {
+    state: "speaking",
+    who: "Karma",
+    text: "Done. Saffron has a table for four, Saturday at 8:00 pm. I added it to your calendar.",
     ms: 3600,
   },
 ];
@@ -44,72 +54,97 @@ interface UseCase {
 
 const USE_CASES: UseCase[] = [
   {
-    id: 'dinner',
-    label: 'Plan dinner',
-    say: 'Book a table for four on Saturday at 8.',
-    actions: ['Searched 12 restaurants', 'Reserved at Saffron', 'Added to calendar'],
-    reply: 'Table for four at Saffron, Saturday 8:00 pm. I added it to your calendar.',
+    id: "dinner",
+    label: "Plan dinner",
+    say: "Book a table for four on Saturday at 8.",
+    actions: [
+      "Searched 12 restaurants",
+      "Reserved at Saffron",
+      "Added to calendar",
+    ],
+    reply:
+      "Table for four at Saffron, Saturday 8:00 pm. I added it to your calendar.",
   },
   {
-    id: 'inbox',
-    label: 'Catch up on email',
-    say: 'What did I miss in my inbox this morning?',
-    actions: ['Read 23 unread emails', 'Grouped by sender', 'Drafted 2 replies'],
-    reply: 'Two need you: Priya’s contract and the venue invoice. I drafted replies to both.',
+    id: "inbox",
+    label: "Catch up on email",
+    say: "What did I miss in my inbox this morning?",
+    actions: [
+      "Read 23 unread emails",
+      "Grouped by sender",
+      "Drafted 2 replies",
+    ],
+    reply:
+      "Two need you: Priya’s contract and the venue invoice. I drafted replies to both.",
   },
   {
-    id: 'home',
-    label: 'Wind down',
-    say: 'I’m heading to bed. Lock up and wake me at 6:30.',
-    actions: ['Lights off', 'Front door locked', 'Alarm set for 6:30'],
-    reply: 'Everything’s off and the door is locked. Alarm is set for 6:30. Good night.',
+    id: "home",
+    label: "Wind down",
+    say: "I’m heading to bed. Lock up and wake me at 6:30.",
+    actions: ["Lights off", "Front door locked", "Alarm set for 6:30"],
+    reply:
+      "Everything’s off and the door is locked. Alarm is set for 6:30. Good night.",
   },
   {
-    id: 'trip',
-    label: 'Move a flight',
-    say: 'Push my Friday flight to Sunday evening.',
-    actions: ['Found 3 Sunday options', 'Compared fare change', 'Held the 6:10 pm seat'],
-    reply: 'The 6:10 pm costs ₹1,800 more. I’m holding it for 10 minutes. Want me to book it?',
+    id: "trip",
+    label: "Move a flight",
+    say: "Push my Friday flight to Sunday evening.",
+    actions: [
+      "Found 3 Sunday options",
+      "Compared fare change",
+      "Held the 6:10 pm seat",
+    ],
+    reply:
+      "The 6:10 pm costs ₹1,800 more. I’m holding it for 10 minutes. Want me to book it?",
   },
 ];
 
 const ABILITIES = [
   {
-    title: 'It remembers the conversation',
-    body: 'Say “make it Sunday instead” and Karma knows what “it” is. No repeating yourself, no magic phrases.',
+    title: "It remembers the conversation",
+    body: "Say “make it Sunday instead” and Karma knows what “it” is. No repeating yourself, no magic phrases.",
   },
   {
-    title: 'It finishes the job',
-    body: 'Karma books, sends, sets and pays. One request can run across your calendar, email, home and bookings.',
+    title: "It finishes the job",
+    body: "Karma books, sends, sets and pays. One request can run across your calendar, email, home and bookings.",
   },
   {
-    title: 'It asks before it spends',
-    body: 'Anything that costs money or can’t be undone waits for a spoken yes from you.',
+    title: "It asks before it spends",
+    body: "Anything that costs money or can’t be undone waits for a spoken yes from you.",
   },
   {
-    title: 'It works with what you use',
-    body: 'Connect Google, Outlook, Spotify, your smart home and more. You choose what Karma can see.',
+    title: "It works with what you use",
+    body: "Connect Google, Outlook, Spotify, your smart home and more. You choose what Karma can see.",
   },
 ];
 
 const STEPS = [
-  { title: 'Say it', body: 'Talk the way you would to a person. Karma starts listening when you say its name or tap the device.' },
-  { title: 'Karma works', body: 'It breaks your request into steps and does them across your connected apps.' },
-  { title: 'You confirm', body: 'You hear a short summary and say yes, change it, or cancel.' },
+  {
+    title: "Say it",
+    body: "Talk the way you would to a person. Karma starts listening when you say its name or tap the device.",
+  },
+  {
+    title: "Karma works",
+    body: "It breaks your request into steps and does them across your connected apps.",
+  },
+  {
+    title: "You confirm",
+    body: "You hear a short summary and say yes, change it, or cancel.",
+  },
 ];
 
 const PRIVACY = [
-  'Karma listens only after it hears its name or you tap the device.',
-  'Audio is processed, then deleted. Transcripts are kept only if you turn that on.',
-  'Say “delete what I just said” or clear everything from Settings, any time.',
+  "Karma listens only after it hears its name or you tap the device.",
+  "Audio is processed, then deleted. Transcripts are kept only if you turn that on.",
+  "Say “delete what I just said” or clear everything from Settings, any time.",
 ];
 
 const MENU_LINKS = [
-  { label: 'Examples', href: '#examples' },
-  { label: 'What it does', href: '#abilities' },
-  { label: 'How it works', href: '#how' },
-  { label: 'Privacy', href: '#privacy' },
-  { label: 'Demo', href: '#demo' },
+  { label: "Examples", href: "#examples" },
+  { label: "What it does", href: "#abilities" },
+  { label: "How it works", href: "#how" },
+  { label: "Privacy", href: "#privacy" },
+  { label: "Demo", href: "#demo" },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -117,31 +152,45 @@ const MENU_LINKS = [
 /*  width of its container (the wordmark look). Height is set by the   */
 /*  `height` prop; letters stretch horizontally to match.              */
 /* ------------------------------------------------------------------ */
-const FitWord: React.FC<{ text: string; height: string }> = ({ text, height }) => {
-  const [m, setM] = useState({ x: 0, y: 88, w: 100 * text.length * 0.5, h: 88 });
+const FitWord: React.FC<{ text: string; height: string }> = ({
+  text,
+  height,
+}) => {
+  const [m, setM] = useState({
+    x: 0,
+    y: 88,
+    w: 100 * text.length * 0.5,
+    h: 88,
+  });
 
   useEffect(() => {
     let cancelled = false;
     const measure = async () => {
       try {
-        await document.fonts.load('100px Anton');
+        await document.fonts.load("100px Anton");
       } catch {
         /* ignore */
       }
       if (cancelled) return;
-      const ctx = document.createElement('canvas').getContext('2d');
+      const ctx = document.createElement("canvas").getContext("2d");
       if (!ctx) return;
-      ctx.font = '100px Anton';
+      ctx.font = "100px Anton";
       const t = ctx.measureText(text);
       const w = t.actualBoundingBoxLeft + t.actualBoundingBoxRight;
       const h = t.actualBoundingBoxAscent + t.actualBoundingBoxDescent;
-      if (w > 0 && h > 0) setM({ x: t.actualBoundingBoxLeft, y: t.actualBoundingBoxAscent, w, h });
+      if (w > 0 && h > 0)
+        setM({
+          x: t.actualBoundingBoxLeft,
+          y: t.actualBoundingBoxAscent,
+          w,
+          h,
+        });
     };
     measure();
-    document.fonts?.addEventListener?.('loadingdone', measure);
+    document.fonts?.addEventListener?.("loadingdone", measure);
     return () => {
       cancelled = true;
-      document.fonts?.removeEventListener?.('loadingdone', measure);
+      document.fonts?.removeEventListener?.("loadingdone", measure);
     };
   }, [text]);
 
@@ -150,9 +199,15 @@ const FitWord: React.FC<{ text: string; height: string }> = ({ text, height }) =
       viewBox={`0 0 ${m.w} ${m.h}`}
       preserveAspectRatio="none"
       aria-hidden="true"
-      style={{ display: 'block', width: '100%', height }}
+      style={{ display: "block", width: "100%", height }}
     >
-      <text x={m.x} y={m.y} fontFamily="Anton, Impact, sans-serif" fontSize="100" fill="currentColor">
+      <text
+        x={m.x}
+        y={m.y}
+        fontFamily="Anton, Impact, sans-serif"
+        fontSize="100"
+        fill="currentColor"
+      >
         {text}
       </text>
     </svg>
@@ -166,19 +221,19 @@ const Landing: React.FC = () => {
   const videoSectionRef = useRef<HTMLElement>(null);
 
   const scrollToDemo = () => {
-    videoSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+    videoSectionRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   /* ---------- intro: model flies in from the top-left ---------- */
   const stageRef = useRef<HTMLDivElement>(null);
-  const [flyFrom, setFlyFrom] = useState('');
-  const [phase, setPhase] = useState<IntroPhase>('wait');
-  const done = phase === 'done';
+  const [flyFrom, setFlyFrom] = useState("");
+  const [phase, setPhase] = useState<IntroPhase>("wait");
+  const done = phase === "done";
 
   // Work out the starting transform (top-left, small) before the first paint
   useLayoutEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setPhase('done'); // skip the animation entirely
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setPhase("done"); // skip the animation entirely
       return;
     }
     window.scrollTo(0, 0);
@@ -192,31 +247,31 @@ const Landing: React.FC = () => {
 
   // Start the flight once the model has loaded (with a fallback if it never does)
   useEffect(() => {
-    if (phase !== 'wait') return;
+    if (phase !== "wait") return;
     const delay = modelLoaded ? 350 : 8000;
-    const t = window.setTimeout(() => setPhase('fly'), delay);
+    const t = window.setTimeout(() => setPhase("fly"), delay);
     return () => window.clearTimeout(t);
   }, [modelLoaded, phase]);
 
   // Safety net: finish the intro even if transitionend never fires
   useEffect(() => {
-    if (phase !== 'fly') return;
-    const t = window.setTimeout(() => setPhase('done'), 2200);
+    if (phase !== "fly") return;
+    const t = window.setTimeout(() => setPhase("done"), 2200);
     return () => window.clearTimeout(t);
   }, [phase]);
 
   // No scrolling until the intro is finished
   useEffect(() => {
-    if (phase === 'done') return;
+    if (phase === "done") return;
     const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prev;
     };
   }, [phase]);
 
   /* ---------- hero demo state machine ---------- */
-  const [demoState, setDemoState] = useState<DemoState>('idle');
+  const [demoState, setDemoState] = useState<DemoState>("idle");
   const [caption, setCaption] = useState<DemoStep | null>(null);
   const timers = useRef<number[]>([]);
 
@@ -233,28 +288,29 @@ const Landing: React.FC = () => {
         window.setTimeout(() => {
           setDemoState(step.state);
           setCaption(step);
-        }, elapsed)
+        }, elapsed),
       );
       elapsed += step.ms;
     });
-    timers.current.push(window.setTimeout(() => setDemoState('idle'), elapsed));
+    timers.current.push(window.setTimeout(() => setDemoState("idle"), elapsed));
   };
 
   useEffect(() => clearTimers, []);
 
   /* close the menu with Escape */
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setMenuOpen(false);
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    const onKey = (e: KeyboardEvent) =>
+      e.key === "Escape" && setMenuOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
 
   /* ---------- use-case picker ---------- */
   const [activeCase, setActiveCase] = useState(USE_CASES[0].id);
   const current = USE_CASES.find((u) => u.id === activeCase) ?? USE_CASES[0];
 
-  const active = demoState !== 'idle';
-  const waving = demoState === 'listening' || demoState === 'speaking';
+  const active = demoState !== "idle";
+  const waving = demoState === "listening" || demoState === "speaking";
 
   return (
     <>
@@ -393,25 +449,33 @@ const Landing: React.FC = () => {
       {!modelLoaded && (
         <div
           style={{
-            position: 'fixed',
+            position: "fixed",
             inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: '#FFFFFF',
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "#FFFFFF",
             zIndex: 100,
           }}
         >
-          <img src={loadingSvg} alt="Loading" style={{ width: 110, height: 110, objectFit: 'contain' }} />
+          <img
+            src={loadingSvg}
+            alt="Loading"
+            style={{ width: 110, height: 110, objectFit: "contain" }}
+          />
         </div>
       )}
 
       <div className="kl">
         {/* ---------- HEADER + MENU ---------- */}
-        <header className={`kl-nav kl-reveal ${done ? 'in' : ''}`}>
+        <header className={`kl-nav kl-reveal ${done ? "in" : ""}`}>
           <span className="kl-brand">Karma</span>
           <div className="kl-nav-r">
-            <button type="button" className="kl-u" onClick={() => navigate('/signup')}>
+            <button
+              type="button"
+              className="kl-u"
+              onClick={() => navigate("/signup")}
+            >
               Sign up
             </button>
             <button
@@ -427,16 +491,29 @@ const Landing: React.FC = () => {
           </div>
         </header>
 
-        <div className={`kl-menu ${menuOpen ? 'on' : ''}`} aria-hidden={!menuOpen}>
+        <div
+          className={`kl-menu ${menuOpen ? "on" : ""}`}
+          aria-hidden={!menuOpen}
+        >
           <div className="kl-menu-top">
             <span className="kl-brand">Karma</span>
-            <button type="button" className="kl-u" onClick={() => setMenuOpen(false)} tabIndex={menuOpen ? 0 : -1}>
+            <button
+              type="button"
+              className="kl-u"
+              onClick={() => setMenuOpen(false)}
+              tabIndex={menuOpen ? 0 : -1}
+            >
               Close
             </button>
           </div>
           <nav aria-label="Primary">
             {MENU_LINKS.map((l) => (
-              <a key={l.href} href={l.href} onClick={() => setMenuOpen(false)} tabIndex={menuOpen ? 0 : -1}>
+              <a
+                key={l.href}
+                href={l.href}
+                onClick={() => setMenuOpen(false)}
+                tabIndex={menuOpen ? 0 : -1}
+              >
                 {l.label}
               </a>
             ))}
@@ -446,11 +523,26 @@ const Landing: React.FC = () => {
         <main>
           {/* ---------- HERO ---------- */}
           <section className="kl-hero">
-            <div className={`kl-intro kl-reveal ${done ? 'in' : ''}`} style={{ transitionDelay: '.1s' }}>
+            <div
+              className={`kl-intro kl-reveal ${done ? "in" : ""}`}
+              style={{ transitionDelay: ".1s" }}
+            >
               <div className="kl-meta">
                 <span>Voice first</span>
-                <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true">
-                  <circle cx="15" cy="15" r="12" stroke="currentColor" strokeWidth="3" />
+                <svg
+                  width="30"
+                  height="30"
+                  viewBox="0 0 30 30"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <circle
+                    cx="15"
+                    cy="15"
+                    r="12"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                  />
                   <circle cx="15" cy="15" r="4" fill="currentColor" />
                 </svg>
                 <span>Works across your apps</span>
@@ -458,14 +550,23 @@ const Landing: React.FC = () => {
 
               <div className="kl-flank">
                 <small>Beta</small>
-                <p className="kl-statement">Say it once. Karma handles the rest.</p>
+                <p className="kl-statement">
+                  Say it once. Karma handles the rest.
+                </p>
                 <small>2026</small>
               </div>
 
-              <p className="kl-sub">A voice agent that books, sends, sets and pays across your apps. You talk, it does the work.</p>
+              <p className="kl-sub">
+                A voice agent that books, sends, sets and pays across your apps.
+                You talk, it does the work.
+              </p>
 
               <div className="kl-links">
-                <button type="button" className="kl-u" onClick={() => navigate('/signup')}>
+                <button
+                  type="button"
+                  className="kl-u"
+                  onClick={() => navigate("/signup")}
+                >
                   Get Karma
                 </button>
                 <button type="button" className="kl-u" onClick={runDemo}>
@@ -479,45 +580,66 @@ const Landing: React.FC = () => {
 
             {/* 3D device on the right: flies in first, then click to talk */}
             <div className="kl-stage" ref={stageRef} onClick={runDemo}>
-              <div className={`kl-glow ${active ? 'on' : ''}`} />
+              <div className={`kl-glow ${active ? "on" : ""}`} />
               <div
-                className={`kl-say ${active ? '' : 'idle'}`}
+                className={`kl-say ${active ? "" : "idle"}`}
                 aria-live="polite"
-                style={{ opacity: done ? 1 : 0, transition: 'opacity .5s ease .2s' }}
+                style={{
+                  opacity: done ? 1 : 0,
+                  transition: "opacity .5s ease .2s",
+                }}
               >
                 {active && caption ? (
                   <>
                     {caption.who}: {caption.text}
-                    <div className={`kl-wave ${waving ? 'on' : ''}`} aria-hidden="true">
+                    <div
+                      className={`kl-wave ${waving ? "on" : ""}`}
+                      aria-hidden="true"
+                    >
                       {Array.from({ length: 14 }).map((_, i) => (
-                        <i key={i} style={{ animationDelay: `${(i % 7) * 0.09}s` }} />
+                        <i
+                          key={i}
+                          style={{ animationDelay: `${(i % 7) * 0.09}s` }}
+                        />
                       ))}
                     </div>
                   </>
                 ) : (
-                  'Tap the device to talk'
+                  "Tap the device to talk"
                 )}
               </div>
 
               <div
                 onTransitionEnd={(e) => {
-                  if (e.propertyName === 'transform' && e.target === e.currentTarget) setPhase('done');
+                  if (
+                    e.propertyName === "transform" &&
+                    e.target === e.currentTarget
+                  )
+                    setPhase("done");
                 }}
                 style={{
-                  width: '100%',
-                  height: '100%',
-                  transform: phase === 'wait' ? flyFrom : 'none',
-                  opacity: phase === 'wait' ? 0 : 1,
+                  width: "100%",
+                  height: "100%",
+                  transform: phase === "wait" ? flyFrom : "none",
+                  opacity: phase === "wait" ? 0 : 1,
                   transition:
-                    phase === 'wait' ? 'none' : 'transform 1.5s cubic-bezier(.22,1,.36,1), opacity .4s ease',
+                    phase === "wait"
+                      ? "none"
+                      : "transform 1.5s cubic-bezier(.22,1,.36,1), opacity .4s ease",
                 }}
               >
-                <AlexaViewer onLoad={() => setModelLoaded(true)} onClick={runDemo} />
+                <AlexaViewer
+                  onLoad={() => setModelLoaded(true)}
+                  onClick={runDemo}
+                />
               </div>
             </div>
 
             {/* Stretched wordmark behind the device */}
-            <h1 className={`kl-giant kl-reveal ${done ? 'in' : ''}`} style={{ transitionDelay: '.3s' }}>
+            <h1
+              className={`kl-giant kl-reveal ${done ? "in" : ""}`}
+              style={{ transitionDelay: ".3s" }}
+            >
               <span className="kl-sr">Karma</span>
               <FitWord text="KARMA" height="min(46vh, 30vw)" />
             </h1>
@@ -527,10 +649,16 @@ const Landing: React.FC = () => {
           <section className="kl-section" id="examples">
             <div className="kl-wrap">
               <h2 className="kl-h2">Ask for the outcome, not the steps</h2>
-              <p className="kl-lede">Pick a request to see what Karma does with it.</p>
+              <p className="kl-lede">
+                Pick a request to see what Karma does with it.
+              </p>
 
               <div className="kl-cases">
-                <div className="kl-tabs" role="tablist" aria-label="Example requests">
+                <div
+                  className="kl-tabs"
+                  role="tablist"
+                  aria-label="Example requests"
+                >
                   {USE_CASES.map((u) => (
                     <button
                       key={u.id}
@@ -595,9 +723,16 @@ const Landing: React.FC = () => {
             <div className="kl-wrap kl-privacy">
               <div>
                 <h2 className="kl-h2">You decide what Karma hears</h2>
-                <p className="kl-lede">A microphone in your home should come with clear rules. These are ours.</p>
+                <p className="kl-lede">
+                  A microphone in your home should come with clear rules. These
+                  are ours.
+                </p>
                 <div style={{ marginTop: 28 }}>
-                  <button type="button" className="kl-u" onClick={() => navigate('/privacy')}>
+                  <button
+                    type="button"
+                    className="kl-u"
+                    onClick={() => navigate("/privacy")}
+                  >
                     Read the privacy details
                   </button>
                 </div>
@@ -617,9 +752,15 @@ const Landing: React.FC = () => {
           <section className="kl-final">
             <div className="kl-wrap">
               <FitWord text="TRY KARMA" height="min(26vh, 17vw)" />
-              <p className="kl-lede">Free to start. Connect your first app in two minutes.</p>
+              <p className="kl-lede">
+                Free to start. Connect your first app in two minutes.
+              </p>
               <div className="kl-final-row">
-                <button type="button" className="kl-btn" onClick={() => navigate('/signup')}>
+                <button
+                  type="button"
+                  className="kl-btn"
+                  onClick={() => navigate("/signup")}
+                >
                   Get Karma
                 </button>
                 <button type="button" className="kl-u" onClick={runDemo}>
