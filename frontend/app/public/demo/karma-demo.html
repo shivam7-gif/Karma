@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Karma: MCP shopping agent demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light;--ink:#111114;--mut:#6b6f7a;--line:#e6e7ec;--soft:#f4f4f6;--vio:#6d5ef0;--vs:#f3f1ff;--ok:#1a9d5c;--teal:#0f766e;box-sizing:border-box}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:#e9eaf0;font-family:'Inter',system-ui,sans-serif;color:var(--ink)}
+body{display:grid;place-items:center;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+#stage{position:relative;container-type:size;width:min(100vw,calc(100vh*16/9));aspect-ratio:16/9;overflow:hidden;background:linear-gradient(155deg,#fff 0%,#f6f4ff 52%,#e9f1ff 100%);font-size:1.1cqw;letter-spacing:-.01em}
+.scene{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .5s,visibility .5s}
+.scene.on{opacity:1;visibility:visible}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace;letter-spacing:0}
+.fade{opacity:0;transform:translateY(.8cqw);transition:opacity .45s,transform .45s}
+.fade.in{opacity:1;transform:none}
+.ic{width:1.7cqw;height:1.7cqw;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* shell */
+#top{position:absolute;left:0;right:0;top:0;height:8cqw;z-index:5}
+#crumb{position:absolute;left:3.2cqw;top:2.6cqw;font-size:1.3cqw;color:var(--mut)}#crumb b{font-weight:500;color:var(--ink)}
+#tabs{position:absolute;left:50%;top:1.6cqw;transform:translateX(-50%);display:flex;gap:.3cqw;background:#ececf0;border-radius:1.6cqw;padding:.4cqw}
+.tab{display:flex;align-items:center;gap:.7cqw;padding:.8cqw 1.6cqw;border-radius:1.2cqw;font-size:1.25cqw;color:var(--mut);transition:.3s}
+.tab.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(20,20,40,.1)}
+#rt{position:absolute;right:3cqw;top:2cqw;display:flex;align-items:center;gap:1.4cqw}
+.pill{border:1px solid var(--line);background:#fff;border-radius:2cqw;padding:.4cqw 1.2cqw;font-size:1.05cqw;color:var(--mut)}
+.av{width:3cqw;height:3cqw;border-radius:50%;background:#dcd8ff;color:#3b2fb8;display:grid;place-items:center;font-weight:600;font-size:1.2cqw}
+#rail{position:absolute;left:1.8cqw;top:13cqw;width:3.8cqw;padding:.8cqw 0;background:#fff;border:1px solid var(--line);border-radius:1.2cqw;display:flex;flex-direction:column;align-items:center;gap:1.4cqw;color:var(--mut);z-index:5}
+#rail .ic{width:1.6cqw;height:1.6cqw}
+#rail .a{background:var(--vs);color:var(--vio);border-radius:.8cqw;padding:.7cqw;width:2.6cqw;height:2.6cqw;display:grid;place-items:center}
+
+/* scene 1 */
+#um{position:absolute;right:4.5cqw;top:11cqw;width:30cqw;background:var(--soft);border:1px solid var(--line);border-radius:.8cqw;padding:1.3cqw 1.6cqw;font-size:1.55cqw;line-height:1.4}
+#pl{position:absolute;left:24cqw;top:18.5cqw;display:flex;gap:.3cqw;align-items:stretch}
+#pl .c1{border:1px solid var(--line);background:#fff;border-radius:.6cqw;padding:.6cqw 1.2cqw;font-size:1.2cqw;display:flex;align-items:center;gap:.8cqw}
+#pl .c1 i{width:.6cqw;height:.6cqw;border-radius:50%;background:var(--ink)}
+#pl .c2{border:1px solid var(--line);background:var(--vs);border-radius:.6cqw;padding:0 1.2cqw;display:flex;gap:.45cqw;align-items:center}
+#pl .c2 i{width:.5cqw;height:.5cqw;border-radius:50%;background:#a99ff6;animation:dt 1.2s infinite}
+#pl .c2 i:nth-child(2){animation-delay:.2s}#pl .c2 i:nth-child(3){animation-delay:.4s}
+@keyframes dt{50%{opacity:.25}}
+#rep{position:absolute;left:24cqw;top:25cqw;font-size:1.6cqw;max-width:40cqw}
+#cmp{position:absolute;left:26.5cqw;width:47cqw;bottom:5cqw;height:10cqw;background:#fff;border:1px solid var(--line);border-radius:1.8cqw;box-shadow:0 .6cqw 2.4cqw rgba(40,40,80,.07);padding:1.8cqw 2cqw}
+#ct{font-size:1.6cqw;min-height:2.4cqw}#ph{color:var(--mut)}
+.caret{display:inline-block;width:.12cqw;height:1.7cqw;background:var(--ink);vertical-align:-.3cqw;animation:bl 1s steps(2) infinite}
+@keyframes bl{50%{opacity:0}}
+#cr{position:absolute;left:2cqw;bottom:1.6cqw;display:flex;gap:.8cqw;align-items:center;color:#9a9ea8}
+.cp{display:flex;align-items:center;gap:.6cqw;background:var(--soft);border-radius:.8cqw;padding:.6cqw 1.1cqw;font-size:1.2cqw;color:#8a8e99}.cp .ic{width:1.3cqw;height:1.3cqw}
+#sb{position:absolute;right:1.6cqw;bottom:1.4cqw;width:3.8cqw;height:3.8cqw;border-radius:50%;background:#d9dae0;display:grid;place-items:center;transition:.3s}
+#sb::after{content:"";width:1.2cqw;height:1.2cqw;border-radius:.2cqw;background:#fff;display:none}
+#sb.go{background:var(--ink)}#sb.go svg{display:none}#sb.go::after{display:block}
+#sb svg{width:1.6cqw;height:1.6cqw;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round}
+
+/* scene 2 */
+#s2 h2{position:absolute;top:10cqw;width:100%;text-align:center;margin:0;font-size:1.7cqw;font-weight:500}
+#s2 h2 span{color:var(--mut)}
+svg#wires{position:absolute;inset:0;width:100%;height:100%}
+svg#wires path{fill:none;stroke:#d5d7e0;stroke-width:1.5;vector-effect:non-scaling-stroke}
+svg#wires path.live{stroke:var(--vio);stroke-dasharray:5 7;animation:fl .8s linear infinite}
+@keyframes fl{to{stroke-dashoffset:-12}}
+#hub{position:absolute;left:50%;top:51%;width:14cqw;height:14cqw;margin:-7cqw;border-radius:50%;background:#fff;border:1.5px solid var(--line);display:grid;place-items:center;text-align:center;font-size:1.5cqw;font-weight:600;transition:.4s}
+#hub small{display:block;font-weight:400;color:var(--mut);font-size:1cqw;margin-top:.3cqw}
+#hub.live{border-color:var(--vio);box-shadow:0 .6cqw 2.4cqw rgba(109,94,240,.18)}
+.nd{position:absolute;width:23cqw;transform:translateY(-50%);background:#fff;border:1px solid var(--line);border-radius:1cqw;padding:1.1cqw 1.4cqw;transition:.35s}
+.nd b{font-size:1.35cqw;font-weight:500;display:block}.nd code{font-size:.95cqw;color:var(--mut)}
+.nd.live{border-color:var(--vio);background:var(--vs)}.nd.live code{color:var(--vio)}
+#log2{position:absolute;left:30cqw;right:30cqw;bottom:5.5cqw;height:7cqw;overflow:hidden;font-size:1.05cqw;display:flex;flex-direction:column;justify-content:flex-end}
+.ln{opacity:0;transform:translateX(-.6cqw);transition:.3s;padding:.25cqw 0;font-family:'JetBrains Mono',ui-monospace,monospace;letter-spacing:0}
+.ln.in{opacity:1;transform:none}.ln .o{color:var(--vio)}.ln .g{color:var(--ok)}.ln .m{color:var(--mut)}
+
+/* scene 3/4 */
+#br{position:absolute;left:8cqw;top:9cqw;width:60cqw;height:44.5cqw;border-radius:1.2cqw;background:#fff;border:1px solid var(--line);overflow:hidden;box-shadow:0 1.2cqw 4cqw rgba(40,40,90,.1)}
+.bar{height:3.4cqw;background:#f1f2f5;display:flex;align-items:center;gap:.6cqw;padding:0 1.2cqw;border-bottom:1px solid var(--line)}
+.bar i{width:.9cqw;height:.9cqw;border-radius:50%;background:#cfd1d9}
+.url{margin-left:1cqw;flex:1;height:2.1cqw;border-radius:1.1cqw;background:#fff;border:1px solid var(--line);color:var(--mut);font-size:.95cqw;padding:0 1.2cqw;display:flex;align-items:center}
+.hd{height:4.6cqw;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:2cqw;padding:0 1.6cqw}
+.logo{font-weight:600;font-size:1.7cqw}.logo span{color:var(--teal)}
+.sb2{flex:1;height:2.8cqw;border:1.5px solid var(--teal);border-radius:.6cqw;font-size:1.15cqw;display:flex;align-items:center;padding:0 1cqw;position:relative}
+.sb2 u{position:absolute;right:0;top:0;bottom:0;width:3.6cqw;background:var(--teal);border-radius:0 .3cqw .3cqw 0}
+.pg{height:36.4cqw;overflow:hidden;padding:1.3cqw;background:#fafafb}
+.res{font-size:1.15cqw;color:var(--mut);margin-bottom:.9cqw}
+.gw{height:30cqw;overflow:hidden}
+.gr{display:grid;grid-template-columns:repeat(4,1fr);gap:1cqw;transition:transform 1s ease}
+.card{background:#fff;border:1px solid var(--line);border-radius:.8cqw;padding:.8cqw;height:12.6cqw;display:flex;flex-direction:column;gap:.3cqw;opacity:0;transform:scale(.97);transition:opacity .4s,transform .4s,border-color .3s,box-shadow .3s}
+.card.in{opacity:1;transform:none}.card.in.dim{opacity:.3}
+.card.in.win{border-color:var(--vio);box-shadow:0 .5cqw 2cqw rgba(109,94,240,.22),0 0 0 1px var(--vio)}
+.kb{height:5.4cqw;border-radius:.5cqw;background:radial-gradient(circle,#aeb1bc .2cqw,transparent .25cqw) 0 0/.9cqw .9cqw,#eceef2;margin-bottom:.3cqw}
+.card b{font-size:1.12cqw;font-weight:500}.card .st{font-size:.95cqw;color:var(--mut)}.card .pr{font-size:1.45cqw;font-weight:600}
+.co{display:grid;grid-template-columns:1.5fr 1fr;gap:1.4cqw}
+.bx{background:#fff;border:1px solid var(--line);border-radius:.8cqw;padding:1.2cqw;font-size:1.15cqw;margin-bottom:1cqw;transition:.3s;line-height:1.5}
+.bx.hl{border-color:var(--vio);background:var(--vs)}
+.bx h4{margin:0 0 .4cqw;font-size:1.25cqw;font-weight:600}
+.bx .kb{width:8cqw;float:left;margin-right:1.2cqw;height:5cqw}
+.tot{font-size:1.9cqw;font-weight:600;margin:.5cqw 0}
+#auth{position:absolute;inset:0;background:rgba(246,245,255,.78);display:grid;place-items:center;opacity:0;visibility:hidden;transition:.4s}
+#auth.on{opacity:1;visibility:visible}
+.am{width:31cqw;background:#fff;border:1px solid var(--line);border-radius:1.4cqw;padding:2.2cqw;text-align:center;box-shadow:0 1.4cqw 5cqw rgba(60,50,150,.16)}
+.am h3{margin:0 0 .5cqw;font-size:1.8cqw;font-weight:600}.am p{margin:0;color:var(--mut);font-size:1.15cqw}
+.am .amt{font-size:3cqw;font-weight:600;margin:1.1cqw 0}
+.btn{display:inline-block;background:var(--ink);color:#fff;font-weight:500;font-size:1.3cqw;padding:1cqw 2.8cqw;border-radius:5cqw;transition:.25s}
+.btn.press{transform:scale(.95);background:var(--ok)}
+.wait{margin-top:1.1cqw;font-size:1cqw!important}
+
+#pn{position:absolute;left:70cqw;top:9cqw;width:26.5cqw;height:44.5cqw;background:#fff;border:1px solid var(--line);border-radius:1.2cqw;padding:1.6cqw;display:flex;flex-direction:column}
+#pn .t{font-size:1.15cqw;color:var(--mut);display:flex;align-items:center;gap:.7cqw}
+#pn .t i{width:.7cqw;height:.7cqw;border-radius:50%;background:var(--vio)}
+#st{font-size:1.8cqw;font-weight:500;line-height:1.25;margin:1.3cqw 0;min-height:6.6cqw}
+#log3{flex:1;overflow:hidden;border-top:1px solid var(--line);padding-top:1cqw}
+#log3 .ln{padding:.45cqw 0;font-size:1.02cqw}
+#cur{position:absolute;left:0;top:0;width:2.2cqw;height:2.2cqw;z-index:20;opacity:0;transition:transform .9s cubic-bezier(.5,.1,.2,1),opacity .3s;pointer-events:none}
+#cur.clk{animation:ck .25s}@keyframes ck{50%{scale:.8}}
+#cur::after{content:"Karma";position:absolute;left:1.6cqw;top:1.8cqw;background:var(--vio);color:#fff;font-size:.85cqw;font-weight:500;padding:.15cqw .6cqw;border-radius:.4cqw}
+
+/* scene 5/6 */
+.ctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.ck{width:11cqw;height:11cqw}
+.ck circle{fill:none;stroke:var(--ok);stroke-width:3.5;stroke-dasharray:302;stroke-dashoffset:302}
+.ck path{fill:none;stroke:var(--ok);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:80;stroke-dashoffset:80}
+.go .ck circle{animation:dr .8s .1s forwards}.go .ck path{animation:dr .5s .8s forwards}
+@keyframes dr{to{stroke-dashoffset:0}}
+#s5 h1{font-size:3.2cqw;font-weight:600;margin:2.2cqw 0 1.6cqw;max-width:56cqw;line-height:1.2;letter-spacing:-.025em}
+.chips{display:flex;gap:1cqw}.chip{border:1px solid var(--line);background:#fff;border-radius:5cqw;padding:.7cqw 1.6cqw;font-size:1.2cqw;color:var(--mut)}.chip b{color:var(--ink);font-weight:500}
+#s6{background:linear-gradient(155deg,#fff 0%,#f6f4ff 52%,#e9f1ff 100%)}
+#s6 h1{font-size:4.2cqw;font-weight:600;margin:0;line-height:1.15;letter-spacing:-.03em}
+.tl{display:flex;gap:1.6cqw;margin-top:4cqw}
+.tile{width:17cqw;background:#fff;border:1px solid var(--line);border-radius:1.2cqw;padding:1.5cqw;text-align:left}
+.tile b{display:block;font-size:2.8cqw;font-weight:600}.tile span{font-size:1.1cqw;color:var(--mut)}
+
+#hud{position:absolute;left:3cqw;right:3cqw;bottom:1.1cqw;display:flex;justify-content:space-between;font-size:.9cqw;color:#9a9ea8;z-index:30}
+#prog{position:absolute;left:0;bottom:0;height:.3cqw;background:var(--vio);width:0;z-index:30;animation:pg 40s linear forwards}
+@keyframes pg{to{width:100%}}
+#rp{position:absolute;right:3cqw;top:2cqw;z-index:40;background:var(--ink);color:#fff;border:0;border-radius:5cqw;font:500 1.2cqw 'Inter',sans-serif;padding:.8cqw 1.8cqw;cursor:pointer;opacity:0;pointer-events:none;transition:.4s}
+#rp.on{opacity:1;pointer-events:auto}#rp:focus-visible{outline:3px solid var(--vio);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){svg#wires path.live,.caret,#pl .c2 i{animation:none}}
+</style>
+</head>
+<body>
+<div id="stage">
+
+<div id="top">
+ <div id="crumb">Karma &nbsp;/&nbsp; <b>Dashboard</b></div>
+ <div id="tabs">
+  <div class="tab" id="tVoice"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Voice</div>
+  <div class="tab on" id="tScreen"><svg class="ic" viewBox="0 0 24 24"><path d="M3 5h18v11H3zM8 20h8M12 16v4"/></svg>Screen</div>
+  <div class="tab" id="tTrace"><svg class="ic" viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Trace</div>
+ </div>
+ <div id="rt"><span class="pill">Early Access</span><div class="av">S</div></div>
+</div>
+<div id="rail"></div>
+
+<div class="scene" id="s1">
+ <div id="um" class="fade">Order me a wireless mechanical keyboard under ₹5,000 with good reviews.</div>
+ <div id="pl" class="fade"><div class="c1"><i></i>Planning your request…</div><div class="c2"><i></i><i></i><i></i></div></div>
+ <div id="rep" class="fade">Got it. I’ll find the best option for you.</div>
+ <div id="cmp">
+  <div id="ct"><span id="typed"></span><span id="ph">Ask Karma to do something…</span><i class="caret" id="cc"></i></div>
+  <div id="cr"><svg class="ic" viewBox="0 0 24 24"><path d="M20 11l-8 8a5 5 0 0 1-7-7l8-8a3.5 3.5 0 0 1 5 5l-8 8a2 2 0 0 1-3-3l7-7"/></svg>
+   <span class="cp"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Voice</span>
+   <span class="cp"><svg class="ic" viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6zM9 8a3 3 0 0 1 6 0"/></svg>Amazon</span>
+   <span class="cp"><svg class="ic" viewBox="0 0 24 24"><path d="M9 8l-4 4 4 4M15 8l4 4-4 4"/></svg>Builder: Auto</span></div>
+  <div id="sb"><svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></div>
+ </div>
+</div>
+
+<div class="scene" id="s2">
+ <h2>MCP server connected <span>· 6 tools available</span></h2>
+ <svg id="wires" viewBox="0 0 160 90" preserveAspectRatio="none"></svg>
+ <div id="hub">Karma<small>MCP client</small></div>
+ <div id="nodes"></div>
+ <div id="log2"></div>
+</div>
+
+<div class="scene" id="s3">
+ <div id="br">
+  <div class="bar"><i></i><i></i><i></i><div class="url mono" id="url">shopmart.com</div></div>
+  <div class="hd"><div class="logo">shop<span>mart</span></div><div class="sb2"><span id="q"></span><u></u></div></div>
+  <div class="pg" id="pgL"><div class="res" id="res">&nbsp;</div><div class="gw"><div class="gr" id="gr"></div></div></div>
+  <div class="pg" id="pgC" style="display:none">
+   <div class="co">
+    <div>
+     <div class="bx"><div class="kb"></div><h4>Nordkey TKL Pro, wireless</h4>Hot-swap switches, Bluetooth and 2.4 GHz<br>4.5 out of 5 · 2,310 ratings<div class="tot">₹3,899</div></div>
+     <div class="bx" id="adr"><h4>Deliver to</h4>Home, Saket, New Delhi 110017</div>
+     <div class="bx" id="pay"><h4>Payment</h4>UPI, saved account ending 4821</div>
+    </div>
+    <div class="bx" id="sum"><h4>Order summary</h4>Item<span style="float:right">₹3,899</span><br>Delivery<span style="float:right;color:var(--ok)">Free</span><div class="tot">Total ₹3,899</div></div>
+   </div>
+  </div>
+  <div id="auth"><div class="am"><h3>Authorize purchase</h3><p>Nordkey TKL Pro · UPI ending 4821</p><div class="amt">₹3,899</div><span class="btn" id="btn">Confirm and pay</span><p class="wait mono" id="wait">Karma is waiting for your confirmation…</p></div></div>
+ </div>
+ <div id="pn">
+  <div class="t"><i></i>Karma · live tool log</div>
+  <div id="st"></div>
+  <div id="log3"></div>
+ </div>
+</div>
+
+<div class="scene" id="s5"><div class="ctr" id="c5">
+ <svg class="ck" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48"/><path d="M28 52l16 16 28-34"/></svg>
+ <h1 class="fade" id="h5">Your AI Shopping Agent has completed the purchase!</h1>
+ <div class="chips fade" id="ch5"><div class="chip">Order <b class="mono">#SM-208841</b></div><div class="chip">Arrives <b>Tue, 4 Nov</b></div><div class="chip">Paid <b>₹3,899</b></div></div>
+</div></div>
+
+<div class="scene" id="s6"><div class="ctr">
+ <h1>Powered by MCP.<br>Driven by AI.<br>Built for Autonomy.</h1>
+ <div class="tl"><div class="tile"><b>6</b><span>MCP tools called</span></div><div class="tile"><b>12</b><span>products compared</span></div><div class="tile"><b>1 tap</b><span>human approval</span></div></div>
+</div></div>
+
+<svg id="cur" viewBox="0 0 24 24"><path d="M4 2l16 9-7 2-3 7z" fill="#111114" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>
+<div id="hud" class="mono"><span id="lbl"></span><span id="tc">0.0s</span></div>
+<div id="prog"></div>
+<button id="rp" type="button">Replay</button>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const T=[];const at=(t,f)=>T.push(setTimeout(f,t*1000));
+const L={s1:'Request',s2:'MCP trace',s3:'Browser agent',s5:'Order placed',s6:'Karma'};
+const tab=n=>['Voice','Screen','Trace'].forEach(x=>$('t'+x).classList.toggle('on',x===n));
+const show=id=>{document.querySelectorAll('.scene').forEach(s=>s.classList.toggle('on',s.id===id));$('lbl').textContent=L[id]};
+const log=(box,h)=>{const d=document.createElement('div');d.className='ln';d.innerHTML=h;$(box).appendChild(d);requestAnimationFrame(()=>d.classList.add('in'));while($(box).children.length>14)$(box).firstChild.remove()};
+const typeIn=(el,txt,t0,dur)=>at(t0,()=>{let i=0;const id=setInterval(()=>{el.textContent=txt.slice(0,++i);if(i>=txt.length)clearInterval(id)},dur*1000/txt.length);T.push(id)});
+const cur=$('cur');
+const mv=(el,dx=.5,dy=.5)=>{const s=$('stage').getBoundingClientRect(),r=el.getBoundingClientRect();cur.style.transform=`translate(${r.left-s.left+r.width*dx}px,${r.top-s.top+r.height*dy}px)`};
+const clk=()=>{cur.classList.add('clk');setTimeout(()=>cur.classList.remove('clk'),260)};
+
+/* rail icons */
+['M4 11l8-7 8 7v9H4z','M9 8l-4 4 4 4M15 8l4 4-4 4','M4 12a8 8 0 1 0 3-6M4 4v4h4M12 8v4l3 2','M9 18h6M10 21h4M8 14a6 6 0 1 1 8 0c-1 1-1 2-1 3H9c0-1 0-2-1-3z','M4 6h16v14H4zM4 10h16M8 3v4M16 3v4','M9 7h11M9 12h11M9 17h11M4 7h1M4 12h1M4 17h1','M5 20V10M12 20V4M19 20v-7'].forEach((d,i)=>{
+ $('rail').insertAdjacentHTML('beforeend',`<div class="${i?'':'a'}"><svg class="ic" viewBox="0 0 24 24"><path d="${d}"/></svg></div>`)});
+
+/* tools */
+const TOOLS=[['Amazon Product Search','search_products(q, max_price=5000)','12 listings found',24,'L'],
+['Product Comparison','compare_products(ids[12])','ranked by value',46,'L'],
+['Review Analyzer','analyze_reviews(top=6)','91% positive sentiment',68,'L'],
+['Price Checker','check_price(id)','₹3,899 verified',24,'R'],
+['Shopping Cart Manager','cart.add(id, qty=1)','ready',46,'R'],
+['Order Placement','orders.prepare(id)','needs user approval',68,'R']];
+const W=$('wires'),N=$('nodes');
+TOOLS.forEach((t,i)=>{
+ const y=t[3],Lf=t[4]==='L',x=Lf?51:115,yy=y*.9;
+ const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+ p.setAttribute('d',`M${x} ${yy} C${Lf?66:94} ${yy} ${Lf?66:94} 46 80 46`);p.id='w'+i;W.appendChild(p);
+ const d=document.createElement('div');d.className='nd';d.id='n'+i;d.style.top=y+'%';d.style[Lf?'left':'right']=Lf?'10cqw':'6cqw';
+ d.innerHTML=`<b>${t[0]}</b><code class="mono">${t[1]}</code>`;N.appendChild(d);
+});
+
+/* products */
+const P=[['Keycraft K87',2499,3.9,'1,204'],['Zenith 75',5799,4.6,'890'],['Pulse Mini 61',1999,3.6,'3,410'],['Astra Slim',4499,4.1,'642'],['Volt TKL',6999,4.4,'517'],['Nordkey TKL Pro',3899,4.5,'2,310'],['Orbit 68',4299,4.2,'1,075'],['Lumen 84',5299,4.5,'733'],['Cobalt 87',2899,3.7,'2,008'],['Ember Compact',4799,4.3,'418'],['Quill Pro',7499,4.7,'260'],['Ridge 98',3299,3.8,'1,590']];
+const GR=$('gr');
+P.forEach((p,i)=>{const c=document.createElement('div');c.className='card';c.id='c'+i;c.style.transitionDelay=(i*60)+'ms,'+(i*60)+'ms,0s,0s';
+ c.innerHTML=`<div class="kb"></div><b>${p[0]}</b><span class="st">${p[2]} out of 5 · ${p[3]}</span><span class="pr">₹${p[1].toLocaleString('en-IN')}</span>`;GR.appendChild(c)});
+
+/* S1: request */
+at(0,()=>{show('s1');tab('Screen')});
+at(.4,()=>{$('ph').style.display='none'});
+typeIn($('typed'),'Order me a wireless mechanical keyboard under ₹5,000 with good reviews.',.5,3);
+at(3.7,()=>{$('typed').textContent='';$('cc').style.display='none';$('ph').style.display='inline';$('ph').textContent='Karma is responding… (Press Esc or click Stop)';$('sb').classList.add('go');$('um').classList.add('in')});
+at(4.3,()=>$('pl').classList.add('in'));
+at(5.2,()=>$('rep').classList.add('in'));
+
+/* S2: MCP */
+at(6,()=>{show('s2');tab('Trace')});
+at(6.4,()=>{$('hub').classList.add('live');log('log2','<span class="g">✓</span> mcp.connect() <span class="m">· 6 tools registered</span>')});
+TOOLS.forEach((t,i)=>{at(7+i*.85,()=>{$('n'+i).classList.add('live');$('w'+i).classList.add('live');log('log2',`<span class="o">→</span> ${t[1]}`)});
+ at(7.5+i*.85,()=>log('log2',`<span class="g">←</span> ${t[2]}`))});
+at(12.1,()=>log('log2','<span class="o">reasoning</span> price ≤ ₹5,000, rating ≥ 4.3, best sentiment'));
+at(12.7,()=>log('log2','<span class="m">handing control to browser agent…</span>'));
+
+/* S3: browse */
+at(13,()=>{show('s3');tab('Screen');$('st').textContent='Opening marketplace…';log('log3','<span class="o">→</span> browser.open(shopmart.com)')});
+at(13.1,()=>{cur.style.opacity=1;mv($('q'),.1)});
+at(13.7,()=>{clk();typeIn($('q'),'wireless mechanical keyboard',0,1.2);$('url').textContent='shopmart.com/s?k=wireless+mechanical+keyboard'});
+at(15,()=>mv(document.querySelector('.sb2 u')));
+at(15.5,()=>{clk();$('st').textContent='Searching listings…';log('log3','<span class="o">→</span> search_products()');$('res').textContent='1-12 of 12 results for “wireless mechanical keyboard”';P.forEach((_,i)=>$('c'+i).classList.add('in'))});
+at(16,()=>{$('st').textContent='Comparing 12 products...';mv($('c1'),.5,.4)});
+at(16.8,()=>{GR.style.transform='translateY(-7cqw)'});
+at(17.2,()=>{mv($('c5'),.5,.4);log('log3','<span class="o">→</span> compare_products(12)')});
+at(18.2,()=>mv($('c9'),.5,.4));
+at(18.6,()=>{$('st').textContent='Filtering products based on user preferences...';log('log3','<span class="m">filter: price ≤ 5000, rating ≥ 4.3</span>');
+ P.forEach((p,i)=>{if(p[1]>5000||p[2]<4.3)setTimeout(()=>$('c'+i).classList.add('dim'),i*70)})});
+at(20.2,()=>{log('log3','<span class="g">←</span> 2 candidates remain');mv($('c9'),.5,.5)});
+at(20.9,()=>{mv($('c5'),.5,.5);log('log3','<span class="o">→</span> analyze_reviews(2,310)')});
+at(21.6,()=>{$('st').textContent='Reading 2,310 reviews…'});
+at(22.1,()=>{$('c5').classList.add('win');clk();$('st').innerHTML='Best match found: <span style="color:var(--vio)">₹3,899 | 4.5 stars</span>';log('log3','<span class="g">←</span> Nordkey TKL Pro selected')});
+
+/* S4: checkout */
+at(23.1,()=>{$('pgL').style.display='none';$('pgC').style.display='block';$('url').textContent='shopmart.com/checkout';$('st').textContent='Preparing checkout…';$('log3').innerHTML='';mv($('pgC').querySelector('.bx'),.8,.5)});
+['Product selected','Price verified','Added to cart','Shipping details verified','Checkout prepared'].forEach((c,i)=>at(24+i*1.2,()=>{log('log3',`<span class="g">✓</span> ${c}`);if(i===2)mv($('sum'),.5,.4);if(i===3){mv($('adr'),.6,.5);$('adr').classList.add('hl')}if(i===4){$('pay').classList.add('hl');mv($('pay'),.6,.5)}}));
+at(29.6,()=>{cur.style.opacity=0;$('auth').classList.add('on');$('st').textContent='Waiting for your authorization';log('log3','<span class="o">…</span> orders.place() paused')});
+at(32,()=>{$('btn').classList.add('press');$('btn').textContent='Confirmed';$('wait').textContent='Authorized by you';log('log3','<span class="g">✓</span> user approved')});
+
+/* S5 / S6 */
+at(33,()=>{show('s5');$('c5').classList.add('go')});
+at(34,()=>$('h5').classList.add('in'));
+at(35,()=>$('ch5').classList.add('in'));
+at(37,()=>show('s6'));
+at(40,()=>$('rp').classList.add('on'));
+
+const t0=performance.now();(function f(){const s=Math.min(40,(performance.now()-t0)/1000);$('tc').textContent=s.toFixed(1)+'s / 40s';if(s<40)requestAnimationFrame(f)})();
+$('rp').onclick=()=>location.reload();
+</script>
+</body>
+</html>
