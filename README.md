@@ -2,7 +2,7 @@
 
 A full-stack TypeScript chat assistant that streams LLM responses, calls tools through the Model Context Protocol (MCP), answers questions over your documents (RAG), and can inspect public GitHub repositories and propose reviewable edits.
 
-- **Frontend:** React 19 
+- **Frontend:** React
 - **Backend:** Express 5 on Node.js, with the MCP server mounted on the same port
 - **LLMs:** Groq (free tier) and OpenRouter (bring your own key)
 - **Storage:** Neon Postgres (conversations, users, encrypted keys), Neo4j Aura (optional, RAG vectors)
